@@ -12,48 +12,33 @@ import scalaz.http.servlet._
 import scalaz.http.servlet.HttpServlet.resource
 import xml.transform._
 import xml._
+import implicits._
+
+object implicits {
+  implicit def richSeq(n: NodeSeq) = new RichNodeSeq {val ns = n}
+}
 
 object WD extends Web[Stream] {
   implicit val charset = UTF8
-
-  def respond(implicit r: Request[Stream]) = OK(ContentType, "text/html") << transitional
-
-  val layout: NodeSeq = {
-    <html>
-      <head>
-        <title>YO TITLE</title>
-          <slinky:head/>
-      </head>
-      <body>
-          <slinky:yield/>
-      </body>
-    </html>
-  }
-
-  def renderWith(rr : Node => NodeSeq) : NodeSeq = {
-    new RuleTransformer(new RewriteRule {
-      override def transform(n : Node) = rr(n)
-    }).transform(layout)
-  }
+  val layout = layouts.main
 
   val Index = new Bit[Unit] {
     def action = const(())
 
     def view = ( implicit request => _ => {
       //~respond match { case 'json => ()}
-      respond << renderWith ((_ : NodeSeq) match {
-        case <slinky:yield /> => <h1>Hi mum</h1>
-        case <slinky:head /> => NodeSeq.Empty        
-        case e => e
-      })
+      respond {
+        <h1>Hi mum</h1>
+      }
     })
   }
 
   def Show(s: String) = new Bit[(String, Int)] {
     def action = const((s, 26))
-
     def view = ( implicit request => dataz => {
-      respond << dataz.toString
+      respond {
+        dataz.toString.text
+      }
     })
   }
 

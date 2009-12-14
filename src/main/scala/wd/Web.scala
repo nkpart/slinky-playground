@@ -10,6 +10,7 @@ import scalaz.http.request.Request._
 import scalaz.http.response._
 import scalaz.http.servlet._
 import scalaz.http.servlet.HttpServlet.resource
+import xml.NodeSeq
 
 trait Web[IN[_]] {
   trait Bit[VT] {
@@ -23,5 +24,18 @@ trait Web[IN[_]] {
     def f : Request[IN] => Response[IN] = request => view(request)(action(request))
   }
 
-  def route(request: Request[IN]): Option[Response[IN]]  
+  val layout : NodeSeq
+  implicit val charset : CharSet
+
+  def route(request: Request[IN]): Option[Response[IN]]
+
+
+  def respond(body: NodeSeq)(implicit r: Request[Stream]) = {
+    val doc = layout.replaceAll(<slinky:yield/>, body)
+    val cleaned = doc.mapTree(_ match {
+      case e if e.prefix == "slinky" => NodeSeq.Empty
+      case n => n
+    })
+    OK(ContentType, "text/html") << transitional << cleaned
+  }
 }
