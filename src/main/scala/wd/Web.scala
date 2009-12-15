@@ -27,8 +27,9 @@ trait Web[IN[_]] {
   val layout : NodeSeq
   implicit val charset : CharSet
 
+  implicit def richSeq(n: NodeSeq) = new RichNodeSeq {val ns = n}
+  
   def route(request: Request[IN]): Option[Response[IN]]
-
 
   def respond(body: NodeSeq)(implicit r: Request[Stream]) = {
     val doc = layout.replaceAll(<slinky:yield/>, body)

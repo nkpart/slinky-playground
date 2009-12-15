@@ -16,9 +16,3 @@ object layouts {
     </html>
   }
 }
-
-object partials {
-  def beer  = {
-
-  }
-}
