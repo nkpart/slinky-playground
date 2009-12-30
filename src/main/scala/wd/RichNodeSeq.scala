@@ -14,6 +14,10 @@ trait RichNodeSeq {
 
   def replaceAll(n: NodeSeq, f: NodeSeq) = mapTree(_ match {
     case e if e == n => f
-    case e => e
+    case e           => e
   })
+}
+
+object RichNodeSeq {
+  implicit def richSeq(n: NodeSeq) = new RichNodeSeq {val ns = n}
 }

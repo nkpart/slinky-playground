@@ -11,32 +11,27 @@ import scalaz.http.response._
 import scalaz.http.servlet._
 import scalaz.http.servlet.HttpServlet.resource
 import xml.NodeSeq
+import gae.Gae._
+import RichNodeSeq._
 
 trait Web[IN[_]] {
-  trait Bit[VT] {
-    type Action = Request[IN] => VT
-    type View = Request[IN] => VT => Response[IN]
+  // TODO strong type of layout. so the implicit is more explicit.
+  implicit val layout: NodeSeq
+  implicit val charset: CharSet
 
-    def action: Action
-    def view: View
-
-    // TODO ?
-    def f : Request[IN] => Response[IN] = request => view(request)(action(request))
-  }
-
-  val layout : NodeSeq
-  implicit val charset : CharSet
-
-  implicit def richSeq(n: NodeSeq) = new RichNodeSeq {val ns = n}
-  
-  def route(request: Request[IN]): Option[Response[IN]]
-
-  def respond(body: NodeSeq)(implicit r: Request[Stream]) = {
-    val doc = layout.replaceAll(<slinky:yield/>, body)
-    val cleaned = doc.mapTree(_ match {
+  def respond(body: NodeSeq)(implicit r: Request[Stream]): Response[Stream] = {
+    val cleaned = body.mapTree(_ match {
       case e if e.prefix == "slinky" => NodeSeq.Empty
       case n => n
     })
     OK(ContentType, "text/html") << transitional << cleaned
+  }
+
+  def inLayout(ns: NodeSeq)(implicit layout: NodeSeq) = {
+    layout.replaceAll(<slinky:yield/>, ns)
+  }
+
+  def render(ns : NodeSeq)(implicit r : Request[Stream]) : Response[Stream] = {
+    respond(inLayout(ns))
   }
 }
