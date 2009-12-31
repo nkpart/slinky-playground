@@ -14,12 +14,17 @@ import xml.NodeSeq
 import gae.Gae._
 import RichNodeSeq._
 
-trait Web[IN[_]] {
-  // TODO strong type of layout. so the implicit is more explicit.
-  implicit val layout: NodeSeq
-  implicit val charset: CharSet
+trait Controller {
+  implicit val layout: NodeSeq   // TODO strong type of layout. so the implicit is more explicit.
+  implicit val charset: CharSet // Needed to create a response, force it here because it's easy to forget
 
-  def respond(body: NodeSeq)(implicit r: Request[Stream]): Response[Stream] = {
+  def render(ns : NodeSeq)(implicit r : Request[Stream]) : Response[Stream] = {
+    respond(inLayout(ns))
+  }
+  
+  def redirectTo(l: String)(implicit r: Request[Stream]): Response[Stream] = Response.redirects(l)
+
+  private def respond(body: NodeSeq)(implicit r: Request[Stream]): Response[Stream] = {
     val cleaned = body.mapTree(_ match {
       case e if e.prefix == "slinky" => NodeSeq.Empty
       case n => n
@@ -27,11 +32,7 @@ trait Web[IN[_]] {
     OK(ContentType, "text/html") << transitional << cleaned
   }
 
-  def inLayout(ns: NodeSeq)(implicit layout: NodeSeq) = {
+  private def inLayout(ns: NodeSeq)(implicit layout: NodeSeq) = {
     layout.replaceAll(<slinky:yield/>, ns)
-  }
-
-  def render(ns : NodeSeq)(implicit r : Request[Stream]) : Response[Stream] = {
-    respond(inLayout(ns))
   }
 }

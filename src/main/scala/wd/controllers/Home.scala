@@ -13,13 +13,8 @@ import com.google.appengine.api.users.{UserServiceFactory}
 import scalaz._
 import Scapps._
 
-trait MyWeb extends Web[Stream] {
+trait BaseController extends DefaultRestfulRoute with Controller {
   implicit val charset = UTF8
-  def userService = UserServiceFactory.getUserService
-  def redirectTo(l: String)(implicit r: Request[Stream]): Response[Stream] = Response.redirects(l)
-}
-
-trait BaseController extends DefaultRestfulRoute with MyWeb {
   implicit val layout = layouts.main(userService)
 }
 

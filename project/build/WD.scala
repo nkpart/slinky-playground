@@ -15,6 +15,6 @@ class WDProject(info: ProjectInfo) extends DefaultWebProject(info) {
   val r2 = "nexus something" at "http://nexus.scala-tools.org/content/repositories/releases"
   
   val r3 = "something" at "http://scala-tools.org/repo-snapshots"  
-  val scalaz_core = "com.googlecode.scalaz" % "scalaz-core_2.8.0.Beta1-RC5" % "5.0-SNAPSHOT"
-  val scalaz_http = "com.googlecode.scalaz" % "scalaz-http_2.8.0.Beta1-RC5" % "5.0-SNAPSHOT"
+//  val scalaz_core = "com.googlecode.scalaz" % "scalaz-core_2.8.0.Beta1-RC5" % "5.0-SNAPSHOT"
+//  val scalaz_http = "com.googlecode.scalaz" % "scalaz-http_2.8.0.Beta1-RC5" % "5.0-SNAPSHOT"
 }

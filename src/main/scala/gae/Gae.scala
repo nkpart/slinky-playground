@@ -9,4 +9,6 @@ private[gae] case class RichUserService(us: UserService) {
 object Gae {
   implicit def richUserServiceTo(us : UserService) : RichUserService = RichUserService(us)
   implicit def richUserServiceFrom(us : RichUserService) : UserService = us.us
+  
+  def userService = UserServiceFactory.getUserService
 }
