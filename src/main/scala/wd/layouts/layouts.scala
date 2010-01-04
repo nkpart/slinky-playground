@@ -12,7 +12,7 @@ object layouts {
 }
   """
 
-  def main(us : UserService): NodeSeq = {
+  def main(us: UserService)(content: NodeSeq): NodeSeq = {
     <html>
       <head>
         <title>BEER ENGINE</title>
@@ -20,7 +20,7 @@ object layouts {
       </head>
       <body>
         <h1>Beer Engine.</h1>
-          <slinky:yield/>
+        { content }
         <div>{us.currentUser} : <a href={us.createLogoutURL("/")}>logout</a></div>
       </body>
     </html>

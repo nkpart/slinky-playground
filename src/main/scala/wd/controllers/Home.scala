@@ -13,9 +13,21 @@ import com.google.appengine.api.users.{UserServiceFactory}
 import scalaz._
 import Scapps._
 
+trait RichRequest[IN[_]] {
+  val request: Request[IN]
+  def apply(s: String)(implicit f: FoldLeft[IN]): Option[String] = (request !| s) ∘ (_.mkString)
+}
+
+object RichRequest {
+  implicit def To[IN[_]](r: Request[IN]) = new RichRequest[IN] { val request = r }
+  implicit def From[IN[_]](r: RichRequest[IN]) = r.request
+}
+
+import RichRequest._
+
 trait BaseController extends DefaultRestfulRoute with Controller {
   implicit val charset = UTF8
-  implicit val layout = layouts.main(userService)
+  val layout = layouts.main(userService) _
 }
 
 class StartController extends BaseController {
@@ -24,9 +36,9 @@ class StartController extends BaseController {
       breweries <- Brewery.all _;
       beers <- Beer.all _
     ) yield {
-        render(<p>{(request ! "k") ∘ (_.mkString)}</p><div>{partials.index}</div>)(request)
+        render(<div>{partials.index}</div>)(request)
       }
-    Database.run(v)    
+    Database.run(v)
   }
 }
 
@@ -36,7 +48,7 @@ class BreweriesController extends BaseController {
   }
   
   override def create(request: Request[Stream]) = Some {
-    val nm = (request | "name") map (_.mkString)
+    val nm = request("name")
     val v = for (name <- nm) yield {
       for (savedB <- Brewery(name, none).persist _) yield savedB
     }
@@ -58,8 +70,8 @@ class BeersController extends BaseController {
   }
   
   override def create(request: Request[Stream]) = Some { render {
-      val name = (request | "name") map (_.mkString)
-      val breweryKey = (request | "brewery") map (_.mkString)
+      val name = request("name")
+      val breweryKey = request("brewery")
       <div>
         <p>
           {name}
@@ -84,11 +96,11 @@ object Home {
     val breweries = new BreweriesController
     val beers = new BeersController
     
-    val app = check(☆(admin _), login) { List(
+    val app = check(☆(admin _), login) { reduce(List(
       at(Nil) >=> m(GET) >=> (start.index _),
       beers.mountByName,
       breweries.mountByName
-    ).∑ }
+      )) }
     app
   }
 }

@@ -15,11 +15,11 @@ import gae.Gae._
 import RichNodeSeq._
 
 trait Controller {
-  implicit val layout: NodeSeq   // TODO strong type of layout. so the implicit is more explicit.
+  val layout: (NodeSeq => NodeSeq)   // TODO strong type of layout. so the implicit is more explicit.
   implicit val charset: CharSet // Needed to create a response, force it here because it's easy to forget
 
   def render(ns : NodeSeq)(implicit r : Request[Stream]) : Response[Stream] = {
-    respond(inLayout(ns))
+    respond(layout(ns))
   }
   
   def redirectTo(l: String)(implicit r: Request[Stream]): Response[Stream] = Response.redirects(l)
@@ -32,7 +32,7 @@ trait Controller {
     OK(ContentType, "text/html") << transitional << cleaned
   }
 
-  private def inLayout(ns: NodeSeq)(implicit layout: NodeSeq) = {
-    layout.replaceAll(<slinky:yield/>, ns)
+  private def inLayout(ns: NodeSeq) = {
+    layout(ns)
   }
 }
