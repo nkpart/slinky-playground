@@ -1,8 +1,13 @@
 package gae
 
-import com.google.appengine.api.datastore.{DatastoreService, Entity, Key}
+import com.google.appengine.api.datastore.{Query, DatastoreService, Entity, Key}
 
 trait Kind[T] { val kind: String   }
+
+object Kind {
+  def classKind[T](implicit m: ClassManifest[T]): Kind[T] = new Kind[T] {val kind = m.erasure.getName}
+  def createQuery[T](implicit k : Kind[T]) = new Query(k.kind)
+}
 
 trait E[T] {
   def withKey(key: Key): T

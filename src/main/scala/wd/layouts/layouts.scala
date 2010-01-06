@@ -2,7 +2,8 @@ package wd
 
 import xml.NodeSeq
 import com.google.appengine.api.users.{UserService, User}
-import gae.Gae._
+import gae._
+import rest._
 
 // TODO package object, couldn't get it to work last time
 object layouts {
@@ -28,17 +29,23 @@ object layouts {
 }
 
 object partials {
-  val index: NodeSeq = {
+  def index(breweries: Iterable[Brewery]): NodeSeq = {
     <div>
       <form action="/search" method="get">
-          <input type="text" name="qry" value=" "/>
+          Search: <input type="text" name="qry" value=" "/>
       </form>
     </div>
-            <div>
-              <a href="/breweries/new">New Brewery</a>
-              |
-              <a href="/beers/new">New Beer</a>
-            </div>
+    <hr />
+    <div>
+      <a href="/breweries/new">Add brewery</a> | <a href="/beers/new">Add beer</a>
+    </div>
+
+    <h3>Breweries</h3>
+    <ul>
+      { breweries.map { brewery =>
+        <li>{ brewery.name } - { brewery.show }</li>
+      } }
+    </ul>
   }
 
   def newBeerForm(breweries: Iterable[Brewery]): NodeSeq = {

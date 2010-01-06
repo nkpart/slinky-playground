@@ -4,15 +4,9 @@ import scalaz.Scalaz._
 import com.google.appengine.api.datastore._
 import gae._
 import scala.collection.JavaConversions.asMap
+import com.google.appengine.api.datastore.Query.SortDirection
 
-object Kinds {
-  def classKind[T](implicit m: ClassManifest[T]): Kind[T] = new Kind[T] {val kind = m.erasure.getName}
-  implicit def beerKind = classKind[Beer]
-  implicit def breweryKind = classKind[Brewery]
-
-  def createQuery[T](implicit k : Kind[T]) = new Query(k.kind)
-}
-import Kinds._
+import Kind._
 
 case class Brewery(name: String, key: Option[Key]) extends E[Brewery] {
   def withKey(k: Key) = this.copy(key = Some(k))
@@ -38,6 +32,10 @@ object Queries {
 
 object Brewery {
   def all(ds : DatastoreService) = Queries.all[Brewery](fromEntity _, ds)
+  def byName(ds : DatastoreService): Iterable[Brewery] = {
+    val qry = createQuery[Brewery].addSort("name", SortDirection.ASCENDING)
+    ds.prepare(qry).asIterable flatMap(fromEntity _)
+  }
   def fromEntity(e: Entity): Option[Brewery] = {
     val name = Option(e.getProperty("name").asInstanceOf[String])
     name map (Brewery(_, Option(e.getKey)))
