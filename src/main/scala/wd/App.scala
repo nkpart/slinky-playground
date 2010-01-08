@@ -19,7 +19,7 @@ final class App extends StreamStreamServletApplication {
 
   def handle(implicit request: Request[Stream], servletRequest: HttpServletRequest): Option[Response[Stream]] = {
     println(MethodParts.unapply(request))
-    Home.route(request)
+    Home.route(Scapps.methodHax[Stream].apply(request))
   }
 
 

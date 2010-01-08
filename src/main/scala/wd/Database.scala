@@ -9,6 +9,7 @@ import com.google.appengine.api.datastore.Query.SortDirection
 import Kind._
 
 case class Brewery(name: String, key: Option[Key]) extends E[Brewery] {
+  override def keyName = Some(Brewery.keyName(name))
   def withKey(k: Key) = this.copy(key = Some(k))
 
   def writeToEntity(e: Entity) {
@@ -31,11 +32,18 @@ object Queries {
 }
 
 object Brewery {
+  def keyName(name: String) = name.split(" ").reduceLeft(_ + "-" + _)
   def all(ds : DatastoreService) = Queries.all[Brewery](fromEntity _, ds)
-  def byName(ds : DatastoreService): Iterable[Brewery] = {
+  def allByName(ds : DatastoreService): Iterable[Brewery] = {
     val qry = createQuery[Brewery].addSort("name", SortDirection.ASCENDING)
     ds.prepare(qry).asIterable flatMap(fromEntity _)
   }
+
+  def findByKeyName(name: String)(ds: DatastoreService): Option[Brewery] = {
+    val key = createKey[Brewery](name)
+    Option(ds.get(key)) >>= fromEntity _
+  }
+  
   def fromEntity(e: Entity): Option[Brewery] = {
     val name = Option(e.getProperty("name").asInstanceOf[String])
     name map (Brewery(_, Option(e.getKey)))
@@ -67,19 +75,7 @@ object Beer {
 }
 
 object Database {
-  def datastore = DatastoreServiceFactory.getDatastoreService
+  private def datastore = DatastoreServiceFactory.getDatastoreService
   
-  def run[T](f : DatastoreService => T) : T = f(datastore)
-
-  def demo {
-    val brewery = Brewery("Kristian's House", none)
-    val savedBrewery = brewery.persist(datastore)
-    val beer = Beer("white xmas stout", savedBrewery, none)
-    val savedBeer = beer.persist(datastore)
-    savedBrewery.beers(datastore).foreach(b => println(b.toString))
-
-    val newB = savedBeer.copy(name = "white christmas stout")
-    newB.persist(datastore)
-    savedBrewery.beers(datastore).foreach(b => println(b.toString))
-  }
+  def runDb[T](f : DatastoreService => T) : T = f(datastore)
 }
