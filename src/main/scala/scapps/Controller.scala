@@ -1,4 +1,4 @@
-package wd
+package scapps
 
 import Function._
 import scalaz.Scalaz._

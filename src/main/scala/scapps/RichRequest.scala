@@ -1,9 +1,8 @@
-package wd
+package scapps
 
 import scalaz.http.request.Request
 import scalaz._
 import Scalaz._
-
 
 trait RichRequest[IN[_]] {
   val request: Request[IN]

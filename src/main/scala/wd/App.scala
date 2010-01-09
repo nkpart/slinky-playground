@@ -13,6 +13,7 @@ import scalaz.http.servlet._
 import scalaz.http.servlet.HttpServlet.resource
 import xml.transform._
 import xml._
+import scapps.Scapps
 
 final class App extends StreamStreamServletApplication {
   implicit val charset = UTF8

@@ -1,4 +1,4 @@
-package wd
+package scapps
 
 import scalaz._
 import scalaz.Scalaz._
@@ -6,8 +6,6 @@ import scalaz.http.request._
 import scalaz.http.response._
 
 object Scapps {
-
-
   def methodHax[IN[_]: FoldLeft]: (Request[IN] => Request[IN]) = ((r: Request[IN]) =>
     ((r !| "_method") ∘ (_.mkString) >>= (scalaz.http.Slinky.StringMethod _)) ∘ { (method:Method) => r(method) } getOrElse r
   )
@@ -60,8 +58,9 @@ object Scapps {
         }
         if (checks ∀ (_.isDefined)) {
           some(checks.foldl(request, (r: Request[Stream], check: Option[Option[(String, String)]]) => check match {
-            case Some(Some((k, v))) => addParam(request, k, v)
-            case _ => request
+            case Some(Some((k, v))) => addParam(r, k, v)
+            case Some(None) => r
+            case None => r // should never reach here, all should be defined
           }))
         } else {
           none

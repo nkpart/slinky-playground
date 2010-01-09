@@ -1,4 +1,4 @@
-package wd
+package scapps
 
 import xml._
 import xml.transform._
