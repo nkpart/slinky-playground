@@ -10,10 +10,10 @@ import scalaz.http.response.Response._
 import xml.NodeSeq
 import com.google.appengine.api.users.{UserServiceFactory}
 import scalaz._
-import Scapps._
+import scapps.Scapps._
 import views._
 
-import RichRequest._
+import scapps.RichRequest._
 import scapps.{RestfulActions, Controller}
 
 class StartController(implicit val request: Request[Stream]) extends BaseController {
@@ -41,8 +41,8 @@ object Home {
     val app = check(☆(admin _), login) {
       reduce(List(
         at(Nil) >=> m(GET) >=> (r => new StartController()(r).index),
-        z.rock("beers", {new BeersController()(_)}),
-        z.rock("breweries", {new BreweriesController()(_)})
+        RestfulActions.mount("beers", {new BeersController()(_)}),
+        RestfulActions.mount("breweries", {new BreweriesController()(_)})
         ))
     }
     app(r)

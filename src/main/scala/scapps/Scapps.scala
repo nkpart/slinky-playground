@@ -5,6 +5,12 @@ import scalaz.Scalaz._
 import scalaz.http.request._
 import scalaz.http.response._
 
+trait Postable[T] {
+  def create[IN[_] : FoldLeft](r: Request[IN]): Validation[List[(String,String)], T]
+
+  def update[IN[_] : FoldLeft](r: Request[IN])(t: T): (List[(String,String)], T)
+}
+
 object Scapps {
   def methodHax[IN[_]: FoldLeft]: (Request[IN] => Request[IN]) = ((r: Request[IN]) =>
     ((r !| "_method") ∘ (_.mkString) >>= (scalaz.http.Slinky.StringMethod _)) ∘ { (method:Method) => r(method) } getOrElse r

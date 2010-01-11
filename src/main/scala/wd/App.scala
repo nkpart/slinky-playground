@@ -23,7 +23,6 @@ final class App extends StreamStreamServletApplication {
     Home.route(Scapps.methodHax[Stream].apply(request))
   }
 
-
   val application = new ServletApplication[Stream, Stream] {
     def application(implicit servlet: HttpServlet, servletRequest: HttpServletRequest, request: Request[Stream]) = {
       handle getOrElse resource(x => OK << x.toStream, NotFound.xhtml)

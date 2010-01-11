@@ -4,12 +4,6 @@ import com.google.appengine.api.datastore._
 
 trait Kind[T] { val kind: String   }
 
-object Kind {
-  def classKind[T](implicit m: ClassManifest[T]): Kind[T] = new Kind[T] {val kind = m.erasure.getName}
-  def createQuery[T](implicit k : Kind[T]) = new Query(k.kind)
-  def createKey[T](name: String)(implicit k : Kind[T]) = KeyFactory.createKey(k.kind, name)
-}
-
 trait E[T] {
   def withKey(key: Key): T
 

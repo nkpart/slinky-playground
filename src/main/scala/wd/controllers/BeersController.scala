@@ -1,5 +1,8 @@
-package wd.controllers
+package wd
+package controllers
 
+import scalaz._
+import Scalaz._
 import wd.views.beers
 import scalaz.http.request.Request
 import wd.{Brewery, Database}
