@@ -37,7 +37,7 @@ object Scapps {
     //    k(a) some { x => success(x) } none { fail(a) }
   })
 
-  def reduce(rs: List[Kleisli[Option, Request[Stream], Response[Stream]]]): Kleisli[Option, Request[Stream], Response[Stream]] = {
+  def reduce[T](rs: List[Kleisli[Option, Request[Stream], T]]): Kleisli[Option, Request[Stream], T] = {
     val first = rs.map(k => (k apply _) ∘ (_.fst)).∑
     kleisli(r => first(r).value)
   }

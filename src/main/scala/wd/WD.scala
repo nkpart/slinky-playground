@@ -1,4 +1,4 @@
-import com.google.appengine.api.datastore.KeyFactory
+import com.google.appengine.api.datastore.{DatastoreService, KeyFactory}
 import gae._
 import rest._
 import scalaz.Validation
@@ -6,11 +6,11 @@ import scapps.RichRequests
 import wd.{Brewery, Beer}
 
 package object wd extends RichRequests {
+  type DB[T] = (DatastoreService => T)
   //TODO move to scapps
   type NamedError = (String, String)
   type Posted[T] = Validation[List[NamedError], T]
 
-  import Kind._
   implicit def beerKind = classKind[Beer]
   implicit def breweryKind = classKind[Brewery]
 

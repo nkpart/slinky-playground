@@ -45,7 +45,7 @@ object start {
     <h3>Breweries</h3>
     <ul>
       { breweries.map { brewery =>
-        <li><a href={ brewery.show }>{ brewery.name }</a></li>
+        <li><a href={ brewery.rr.show }>{ brewery.name }</a></li>
       } }
     </ul>
   }
@@ -77,7 +77,7 @@ object breweries {
     }}
     </ul>
     <hr />
-    <div><small><a href={brewery.edit}>Edit</a></small></div>
+    <div><small><a href={brewery.rr.edit}>Edit</a></small></div>
   }
   
   def nnew: NodeSeq = {
@@ -94,7 +94,7 @@ object breweries {
   def edit(brewery: Brewery): NodeSeq = {
     <h2>Changing {brewery.name}</h2>
     <div>
-      <form action={brewery.show} method="post">
+      <form action={brewery.rr.show} method="post">
         <input type="hidden" name="_method" value={PUT} />
         <input type="text" name="name" value={brewery.name} />
         <input type="submit" />

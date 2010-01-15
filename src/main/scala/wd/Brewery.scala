@@ -1,14 +1,17 @@
 package wd
 
-import gae.E
 import com.google.appengine.api.datastore.{DatastoreService, Entity, Key}
 import com.google.appengine.api.datastore.Query.SortDirection
 import scalaz.http.request.Request
-import gae.Kind._
+import gae._
 import scapps.Postable
 import scalaz._
 import Scalaz._
 
+// Location
+// * full address.
+// * country
+// isPub
 case class Brewery(name: String, key: Option[Key]) extends E[Brewery] {
   override def keyName = Some(Brewery.keyName(name))
   def withKey(k: Key) = this.copy(key = Some(k))
@@ -46,7 +49,7 @@ object Brewery {
   implicit object postable extends Postable[Brewery] {
     val Required = "%s is required."
     
-    def required[IN[_]](r: Request[IN])(s : String)(fmt: String) = r(s).toSuccess(s -> fmt.format(s))
+    def required[IN[_]: FoldLeft](r: Request[IN])(s : String)(fmt: String) = r(s).toSuccess(s -> fmt.format(s))
 
     def create[IN[_] : FoldLeft](r: Request[IN]) = {
       val name = required(r)("name")(Required).fail.lift[List, (String, String)]
