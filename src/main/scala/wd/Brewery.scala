@@ -4,22 +4,16 @@ import com.google.appengine.api.datastore.{DatastoreService, Entity, Key}
 import com.google.appengine.api.datastore.Query.SortDirection
 import scalaz.http.request.Request
 import gae._
-import scapps.Postable
 import scalaz._
 import Scalaz._
-
+import scapps.{RequestCreate, RequestUpdate}
 // Location
 // * full address.
 // * country
 // isPub
-case class Brewery(name: String, key: Option[Key]) extends E[Brewery] {
-  override def keyName = Some(Brewery.keyName(name))
-  def withKey(k: Key) = this.copy(key = Some(k))
 
-  def writeToEntity(e: Entity) {
-    e.setProperty("name", name)
-  }
 
+case class Brewery(name: String, key: Option[Key]) {
   def beers(datastore: DatastoreService): Iterable[Beer] = {
     // TODO should key be split off from the class? should only be able to
     // get beers for a saved brewery
@@ -29,7 +23,12 @@ case class Brewery(name: String, key: Option[Key]) extends E[Brewery] {
 }
 
 object Brewery {
-  def keyName(name: String) = name.split(" ").reduceLeft(_ + "-" + _)
+  implicit object breweryEntityThing extends EntityWriteable[Brewery] {
+    def write(b: Brewery, e: Entity) {
+      e.setProperty("name", b.name)
+    }
+  }
+
   def all(ds : DatastoreService) = Queries.all[Brewery](fromEntity _, ds)
   def allByName(ds : DatastoreService): Iterable[Brewery] = {
     val qry = createQuery[Brewery].addSort("name", SortDirection.ASCENDING)
@@ -46,7 +45,7 @@ object Brewery {
     name map (Brewery(_, Option(e.getKey)))
   }
   
-  implicit object postable extends Postable[Brewery] {
+  implicit object postable extends RequestCreate[Brewery] with RequestUpdate[Brewery] {
     val Required = "%s is required."
     
     def required[IN[_]: FoldLeft](r: Request[IN])(s : String)(fmt: String) = r(s).toSuccess(s -> fmt.format(s))

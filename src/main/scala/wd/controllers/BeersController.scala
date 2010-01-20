@@ -6,23 +6,32 @@ import http.response.Response
 import Scalaz._
 import wd.views.beers
 import scalaz.http.request.Request
-import wd.{Brewery, Database}
+import wd._
 import scapps._
+import rest._
+import wd.Beer._
+import com.google.appengine.api.datastore.DatastoreService
 
-class BeersController(implicit val request: Request[Stream]) extends Controller with ControllerHelpers {
-  def handle(v: Verb) = v match {
+class BeersController(val ds: DatastoreService)(implicit val request: Request[Stream]) extends Controller with ControllerHelpers {
+  def handle(v: Action) = v match {
     case New => Some {
-      val v = (Brewery.all _) ∘ (bs => render(beers.nnew(bs)))
-      Database.runDb(v)
+      val breweryKey = request("breweryKey")
+      breweryKey ∘ { key =>
+        ~(Brewery.findByKeyName(key)(ds) ∘ { brewery =>
+          render(beers.nnew(Left(brewery)))
+        })
+      } getOrElse {
+        render(beers.nnew(Right(Brewery.all(ds))))
+      }
     }
 
     case Create => Some {
-      val name = request("name")
+      val c = request.create[Brewery => Beer]
       val breweryKey = request("brewery")
       render {
         <div>
           <p>
-            {name}
+            {c}
           </p>
         </div>
       }

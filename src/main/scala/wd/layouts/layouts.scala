@@ -52,15 +52,22 @@ object start {
 }
 
 object beers {
-  def nnew(breweries: Iterable[Brewery]): NodeSeq = {
+  def breweryChoice(choise: Either[Brewery, Iterable[Brewery]]) = {
+    choise.fold(
+      br => <input type="hidden" name="brewery" value={br.key.toString} />,
+      breweries => (<select name="brewery">
+                  { breweries flatMap (b => { <option value={b.key.toString}>{b.name}</option>  }) }
+                </select>)
+      )
+  }
+
+  def nnew(breweries: Either[Brewery, Iterable[Brewery]]): NodeSeq = {
     <h2>New Beer</h2>
             <div>
               <form action="/beers" method="post">
                 <label for="name">Name:</label>
                   <input type="text" name="name"/>
-                <select name="brewery">
-                  { breweries flatMap (b => { <option value={b.key.toString}>{b.name}</option>  }) }
-                </select>
+                { breweryChoice(breweries) }
                   <input type="submit"/>
               </form>
             </div>
@@ -77,9 +84,12 @@ object breweries {
     }}
     </ul>
     <hr />
-    <div><small><a href={brewery.rr.edit}>Edit</a></small></div>
+    <div><small>
+      <a href={brewery.rr.edit}>Edit</a> |
+    <a href={"/beers/new?breweryKey=%s" format brewery.key.get.getName}>Add beer</a>
+    </small></div>
   }
-  
+
   def nnew: NodeSeq = {
     <h2>New Brewery</h2>
             <div>
@@ -91,7 +101,7 @@ object breweries {
             </div>
   }
 
-  def edit(brewery: Brewery): NodeSeq = {
+  def edit(brewery: Brewery, errors: Seq[String]): NodeSeq = {
     <h2>Changing {brewery.name}</h2>
     <div>
       <form action={brewery.rr.show} method="post">
