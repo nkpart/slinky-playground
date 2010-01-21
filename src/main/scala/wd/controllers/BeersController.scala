@@ -15,7 +15,7 @@ import com.google.appengine.api.datastore.DatastoreService
 
 class BeersController(val ds: DatastoreService)(implicit val request: Request[Stream]) extends Controller with ControllerHelpers {
   
-  def handle(v: Action) = v match {
+  def handle(v: Action[String]) = v match {
     case New => Some {
       val breweryId = request("breweryKey")
       breweryId ∘ { id =>

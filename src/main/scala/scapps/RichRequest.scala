@@ -14,7 +14,7 @@ trait RichRequest[IN[_]] {
 
   def update[T](t: T)(implicit postable: RequestUpdate[T], fl: FoldLeft[IN]) = postable.update(request)(t)
 
-  lazy val action: Option[(String, Action)] = {
+  lazy val action: Option[(String, Action[String])] = {
     request match {
       case MethodParts(GET, List(base)) => Some((base, rest.Index))
       case MethodParts(GET, List(base, "new")) => Some((base, New))

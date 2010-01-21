@@ -21,7 +21,7 @@ class BreweriesController(val ds: DatastoreService)(implicit val request: Reques
 
   def find(keyName: String) = Brewery.findById(keyName)(ds)
 
-  def handle(v: Action): Option[Response[Stream]] = v match {
+  def handle(v: Action[String]): Option[Response[Stream]] = v match {
     case New => render(breweries.nnew) η
 
     case rest.Show(keyName) => {

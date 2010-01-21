@@ -40,7 +40,7 @@ final class WorthDrinkingServlet extends ServletApplicationServlet[Stream, Strea
     userService.createLoginURL("/")
   })(r)).kleisli[Option]
 
-  def resource(base: String, f: (Request[Stream] => Action => Option[Response[Stream]])) = ☆((r: Request[Stream]) => {
+  def resource(base: String, f: (Request[Stream] => Action[String] => Option[Response[Stream]])) = ☆((r: Request[Stream]) => {
     r.action match {
       case Some((b, action)) if b == base => f(r)(action)
       case _ => none
