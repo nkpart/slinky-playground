@@ -101,7 +101,7 @@ object breweries {
             </div>
   }
 
-  def edit(brewery: Brewery, errors: Seq[String]): NodeSeq = {
+  def edit(brewery: Brewery, errors: List[(String, String)]): NodeSeq = {
     <h2>Changing {brewery.name}</h2>
     <div>
       <form action={brewery.rr.show} method="post">

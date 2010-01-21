@@ -12,31 +12,24 @@ import scapps.{RequestCreate, RequestUpdate}
 // * country
 // isPub
 
-
 case class Brewery(name: String, key: Option[Key]) {
   def beers(datastore: DatastoreService): Iterable[Beer] = {
     // TODO should key be split off from the class? should only be able to
     // get beers for a saved brewery
     val query = createQuery[Beer].setAncestor(key.get)
-    datastore.prepare(query).asIterable() flatMap (Beer.fromEntity(_, this))
+    datastore.prepare(query).asIterable() flatMap (Beer.fromEntity _)
   }
 }
 
 object Brewery {
-  implicit object breweryEntityThing extends EntityWriteable[Brewery] {
-    def write(b: Brewery, e: Entity) {
-      e.setProperty("name", b.name)
-    }
-  }
-
   def all(ds : DatastoreService) = Queries.all[Brewery](fromEntity _, ds)
   def allByName(ds : DatastoreService): Iterable[Brewery] = {
     val qry = createQuery[Brewery].addSort("name", SortDirection.ASCENDING)
     ds.prepare(qry).asIterable flatMap(fromEntity _)
   }
 
-  def findByKeyName(name: String)(ds: DatastoreService): Option[Brewery] = {
-    val key = createKey[Brewery](name)
+  def findById(id: String)(ds: DatastoreService): Option[Brewery] = {
+    val key = createKey[Brewery](id.parseLong.success.get)
     Option(ds.get(key)) >>= fromEntity _
   }
 
@@ -57,7 +50,7 @@ object Brewery {
 
     def update[IN[_]: FoldLeft](r: Request[IN])(brewery: Brewery) = {
       val name = required(r)("name")(Required).fail.lift[List, (String, String)]
-      name ∘ { n => brewery copy (name = n) } fold (err => (err, brewery), br => (Nil, br))
+      name ∘ { n => brewery copy (name = n) } fold ((_, brewery), (Nil, _))
     }
   }
 }
