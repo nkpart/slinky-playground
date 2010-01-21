@@ -19,23 +19,21 @@ class BreweriesController(val ds: DatastoreService)(implicit val request: Reques
   def get2[T](f: String => Option[T])(key: String)(g: T => Response[Stream]): Response[Stream] = ~(f(key) ∘ g)
   def getOr404[T](keyName: String)(f: (Brewery => Response[Stream]))(ds: DatastoreService) = get2 {Brewery.findById(_)(ds)}(keyName)(f)
 
-  def find(keyName: String) = Brewery.findById(keyName)(ds)
-
-  def handle(v: Action[String]): Option[Response[Stream]] = v match {
+  def find(keyName: String): Option[Brewery] = Brewery.findById(keyName)(ds)
+  def lookup(v: Action[String]): Option[Action[Brewery]] = v ↦ (find _) // Holy shit that was rad.
+  def handle(v: Action[String]): Option[Response[Stream]] = lookup(v) >>= (handleB _)
+  
+  def handleB(v: Action[Brewery]): Option[Response[Stream]] = v match {
     case New => render(breweries.nnew) η
 
-    case rest.Show(keyName) => {
-      find(keyName) ∘ { br => 
-        val beers = br.beers(ds)
-        render(breweries.show(br, beers))
-      }
-    }
+    case rest.Show(brewery) => {
+      val beers = brewery.beers(ds)
+      render(breweries.show(brewery, beers))
+    } η
 
-    case Edit(keyName) => {
-      find(keyName) ∘ { (brewery: Brewery) =>
-        render(breweries.edit(brewery, Nil))
-      }
-    }
+    case Edit(brewery) => {
+      render(breweries.edit(brewery, Nil))
+    } η
 
     case Create => {
       val readB = request.create[Brewery]
@@ -46,16 +44,15 @@ class BreweriesController(val ds: DatastoreService)(implicit val request: Reques
       }).validation.fold(identity, identity)
     } η
 
-    case Update(keyName) => find(keyName) ∘ { (br: Brewery) =>
-        val (errors, updated) = request.update(br)
+    case Update(brewery) => {
+        val (errors, updated) = request.update(brewery)
         errors match {
           case Nil => redirectTo(updated.persist(ds))
           case (_ :: _) => render(breweries.edit(updated, errors))
         }
-    }
+    } η
 
-
-    case Destroy(id) => None
+    case Destroy(brewery) => None
     case rest.Index => None
   }
 }

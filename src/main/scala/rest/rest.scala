@@ -11,16 +11,26 @@ package object rest {
     }
   }
   
-  implicit val restFunctor = new Functor[rest.Action] {
-    def fmap[A,B](a: Action[A], f: A => B): Action[B] = a match {
-      case Index => Index
-      case Create => Create
-      case Show(v) => Show(f(v))
-      case Update(v) => Update(f(v))
-      case Destroy(v) => Destroy(f(v))
-      case New => New
-      case Edit(v) => Edit(f(v))
+  implicit val actionTraverse = new Traverse[rest.Action] {
+    def traverse[F[_]: Applicative, A, B](f: A => F[B], t: Action[A]): F[Action[B]] = t match {
+      case Index => (Index: Action[B]) η
+      case Create => (Create: Action[B]) η
+      case Show(v) => f(v) map { a => Show(a) }
+      case Update(v) => f(v) map { a => Update(a) }
+      case Destroy(v) => f(v) map { a => Destroy(a) }
+      case New => (New: Action[B]) η
+      case Edit(v) => f(v) map { a => Edit(a) }
     }
+    
+    // override def fmap[A,B](a: Action[A], f: A => B): Action[B] = a match {
+    //   case Index => Index
+    //   case Create => Create
+    //   case Show(v) => Show(f(v))
+    //   case Update(v) => Update(f(v))
+    //   case Destroy(v) => Destroy(f(v))
+    //   case New => New
+    //   case Edit(v) => Edit(f(v))
+    // }
   }
 }
 
