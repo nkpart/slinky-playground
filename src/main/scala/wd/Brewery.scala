@@ -7,6 +7,7 @@ import gae._
 import scalaz._
 import Scalaz._
 import scapps.{RequestCreate, RequestUpdate}
+
 // Location
 // * full address.
 // * country

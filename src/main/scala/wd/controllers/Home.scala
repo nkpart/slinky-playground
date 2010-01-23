@@ -21,8 +21,7 @@ import scapps._
 
 object Start extends BaseController {
   def go(implicit request: Request[Stream]) = {
-    val v = (Brewery.allByName _) ∘ {
-      breweries =>
+    val v = (Brewery.allByName _) ∘ { breweries =>
         render(start.index(breweries))
     }
     Database.runDb(v)
@@ -36,14 +35,12 @@ final class WorthDrinkingServlet extends ServletApplicationServlet[Stream, Strea
 
   def redirectTo(l: String)(implicit r: Request[Stream]): Response[Stream] = Response.redirects(l)
 
-  val login = ((r: Request[Stream]) => redirectTo({
-    userService.createLoginURL("/")
-  })(r)).kleisli[Option]
+  val login = ((r: Request[Stream]) => redirectTo(userService.createLoginURL("/"))(r)).kleisli[Option]
 
   def resource(base: String, f: (Request[Stream] => Action[String] => Option[Response[Stream]])) = ☆((r: Request[Stream]) => {
     r.action match {
       case Some((b, action)) if b == base => f(r)(action)
-      case _ => none
+      case _   => none
     }
   })
 

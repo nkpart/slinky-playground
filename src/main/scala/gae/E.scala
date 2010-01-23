@@ -3,6 +3,8 @@ package gae
 import com.google.appengine.api.datastore._
 import wd.Brewery
 
+case class Keyed[T](value: T,key: Key)
+
 trait Kind[T] {
   def kind: String
 }
