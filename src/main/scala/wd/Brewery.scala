@@ -13,30 +13,31 @@ import scapps.{RequestCreate, RequestUpdate}
 // * country
 // isPub
 
-case class Brewery(name: String, key: Option[Key]) {
-  def beers(datastore: DatastoreService): Iterable[Beer] = {
-    // TODO should key be split off from the class? should only be able to
-    // get beers for a saved brewery
-    val query = createQuery[Beer].setAncestor(key.get)
-    datastore.prepare(query).asIterable() flatMap (Beer.fromEntity _)
-  }
-}
+case class Brewery(name: String)
 
 object Brewery {
+  implicit def lookupBeers(kb: Keyed[Brewery]) = new {
+    def beers(ds: DatastoreService): Iterable[Keyed[Beer]] = {
+      query[Beer](ds) { qry =>
+        qry.setAncestor(kb.key)
+      } flatMap (Beer.fromEntity _)
+    }
+  }
+  
   def all(ds : DatastoreService) = Queries.all[Brewery](fromEntity _, ds)
-  def allByName(ds : DatastoreService): Iterable[Brewery] = {
+  def allByName(ds : DatastoreService): Iterable[Keyed[Brewery]] = {
     val qry = createQuery[Brewery].addSort("name", SortDirection.ASCENDING)
     ds.prepare(qry).asIterable flatMap(fromEntity _)
   }
 
-  def findById(id: String)(ds: DatastoreService): Option[Brewery] = {
+  def findById(id: String)(ds: DatastoreService): Option[Keyed[Brewery]] = {
     val key = createKey[Brewery](id.parseLong.success.get)
     Option(ds.get(key)) >>= fromEntity _
   }
 
-  def fromEntity(e: Entity): Option[Brewery] = {
+  def fromEntity(e: Entity): Option[Keyed[Brewery]] = {
     val name = Option(e.getProperty("name").asInstanceOf[String])
-    name map (Brewery(_, Option(e.getKey)))
+    name >>= (n => Option(e.getKey) map (Keyed(Brewery(n), _)))
   }
   
   implicit object postable extends RequestCreate[Brewery] with RequestUpdate[Brewery] {
@@ -46,7 +47,7 @@ object Brewery {
 
     def create[IN[_] : FoldLeft](r: Request[IN]) = {
       val name = required(r)("name")(Required).fail.lift[List, (String, String)]
-      name ∘ { n => Brewery(n, none) }
+      name ∘ { Brewery.apply _ }
     }
 
     def update[IN[_]: FoldLeft](r: Request[IN])(brewery: Brewery) = {

@@ -16,12 +16,12 @@ case class Beer(name: String, key: Option[Key]) {
 }
 
 object Beer {
-  def fromEntity(e: Entity): Option[Beer] = {
+  def fromEntity(e: Entity): Option[Keyed[Beer]] = {
     val name = Option(e.getProperty("name").asInstanceOf[String])
-    name map (Beer(_, Option(e.getKey)))
+    name map (n => Keyed(Beer(n, Option(e.getKey)), e.getKey))
   }
 
-  def all(ds: DatastoreService): Iterable[Beer] = {
+  def all(ds: DatastoreService): Iterable[Keyed[Beer]] = {
     val es: Iterable[Entity] = ds.prepare(createQuery[Beer]).asIterable
     val breweries: Key => Entity = ds.get(es map (_.getParent))
     es flatMap fromEntity _

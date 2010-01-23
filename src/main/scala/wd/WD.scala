@@ -12,32 +12,19 @@ package object wd extends RichRequests {
   type NamedError = (String, String)
   type Posted[T] = Validation[List[NamedError], T]
   
-  implicit object beerKind extends Kind[Beer] {
+  implicit object beerKey extends KeyFor[wd.Beer] {
     def kind = "Beer"
-  }
-  
-  implicit object beerKey extends KeyFor[(wd.Beer, wd.Brewery)] {
-    def kind = beerKind.kind
-    def keyFor(b: (wd.Beer, wd.Brewery)) = b._1.key
-    def keyName(bb: (wd.Beer, wd.Brewery)) = None
-    def parentKey(bb: (wd.Beer, wd.Brewery)) = Some(bb._2.key.get) // force exception. can only get key for saved brewery
-    def withKey(bb: (wd.Beer, wd.Brewery), k: Key) = (bb._1 copy (key = Some(k)), bb._2)
+    def keyName(bb: wd.Beer) = None
   }
 
   implicit object breweryKey extends KeyFor[wd.Brewery] {
-    def keyFor(b: wd.Brewery) = b.key
     def kind = "Brewery"
     def keyName(b: wd.Brewery) = None
-    def parentKey(b: wd.Brewery) = None
-    def withKey(b: wd.Brewery, k: Key) = b copy (key = Some(k))
    }
 
-  implicit def br = new Resourced[Brewery] {
+  implicit def br = new Resourced[Keyed[Brewery]] {
     val resource: Resource = Resource("breweries")
-    def id(br: Brewery): String = br.key match {
-      case Some(key) => key.getId.shows
-      case None => error("cannot form id from unsaved brewery")
-    }
+    def id(br: Keyed[Brewery]): String = br.key.getId.shows
   }
   
   implicit object breweryEntityThing extends EntityWriteable[wd.Brewery] {

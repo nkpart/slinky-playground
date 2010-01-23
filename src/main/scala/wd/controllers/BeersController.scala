@@ -31,7 +31,7 @@ class BeersController(val ds: DatastoreService)(implicit val request: Request[St
       val c = request.create[Beer].either.right.toOption
       val breweryKey = request("brewery").get
       val br = Brewery.findById(breweryKey)(ds)
-      val persisted = (c <×> br) map { case b@(beer, _) => beer.persistWithKey(b)(ds) }
+      val persisted = (c <×> br) map { case (beer, brk) => beer.insertWithParent(brk.key, ds) }
       render {
         <div>
           <p>

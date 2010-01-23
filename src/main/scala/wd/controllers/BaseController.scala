@@ -9,8 +9,7 @@ import scalaz.http.request.Request
 import wd.views.layouts
 import com.google.appengine.api.users.UserServiceFactory
 
-trait ControllerHelpers {
-  self: Controller =>
+trait ControllerHelpers { self: Controller =>
   
   implicit val charset = UTF8
   

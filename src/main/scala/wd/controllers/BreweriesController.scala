@@ -13,14 +13,15 @@ import scalaz.http.response.Response
 import scalaz.http.request.Request
 import com.google.appengine.api.datastore._
 import wd.views.breweries
+import wd.Brewery._
 
 class BreweriesController(val ds: DatastoreService)(implicit val request: Request[Stream]) extends Controller with ControllerHelpers {
   
-  def find(keyName: String): Option[Brewery] = Brewery.findById(keyName)(ds)
+  def find(keyName: String): Option[Keyed[Brewery]] = Brewery.findById(keyName)(ds)
   
   def handle(v: Action[String]): Option[Response[Stream]] = v ↦ (find _) >>= (handleB _)
   
-  def handleB(v: Action[Brewery]): Option[Response[Stream]] = v match {
+  def handleB(v: Action[Keyed[Brewery]]): Option[Response[Stream]] = v match {
     case New => render(breweries.nnew) η
 
     case rest.Show(brewery) => {
@@ -34,7 +35,7 @@ class BreweriesController(val ds: DatastoreService)(implicit val request: Reques
 
     case Create => {
       val readB = request.create[Brewery]
-      val saved: Posted[Brewery] = readB ∘ {brewery => {brewery.persist(ds)}}
+      val saved: Posted[Keyed[Brewery]] = readB ∘ {brewery => {brewery.insert(ds)}}
       ((saved >| {redirectTo("/")}).fail ∘ {
         (errors: List[NamedError]) =>
           render(<p>No name.</p>)
@@ -42,10 +43,11 @@ class BreweriesController(val ds: DatastoreService)(implicit val request: Reques
     } η
 
     case Update(brewery) => {
-        val (errors, updated) = request.update(brewery)
+        val (errors, updated) = request.update(brewery.value)
+        val newKeyed = Keyed(updated, brewery.key)
         errors match {
-          case Nil => redirectTo(updated.persist(ds))
-          case (_ :: _) => render(breweries.edit(updated, errors))
+          case Nil => redirectTo(newKeyed.save(ds))
+          case (_ :: _) => render(breweries.edit(newKeyed, errors))
         }
     } η
 
