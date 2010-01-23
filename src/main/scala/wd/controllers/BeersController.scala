@@ -20,10 +20,10 @@ class BeersController(val ds: DatastoreService)(implicit val request: Request[St
       val breweryId = request("breweryKey")
       breweryId ∘ { id =>
         ~(Brewery.findById(id)(ds) ∘ { brewery =>
-          render(beers.nnew(Left(brewery)))
+          render(beers.nu(Left(brewery)))
         })
       } getOrElse {
-        render(beers.nnew(Right(Brewery.all(ds))))
+        render(beers.nu(Right(Brewery.all(ds))))
       }
     }
 

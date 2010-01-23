@@ -61,7 +61,7 @@ object beers {
       )
   }
 
-  def nnew(breweries: Either[Keyed[Brewery], Iterable[Keyed[Brewery]]]): NodeSeq = {
+  def nu(breweries: Either[Keyed[Brewery], Iterable[Keyed[Brewery]]]): NodeSeq = {
     <h2>New Beer</h2>
             <div>
               <form action="/beers" method="post">
@@ -90,7 +90,7 @@ object breweries {
     </small></div>
   }
 
-  def nnew: NodeSeq = {
+  def nu: NodeSeq = {
     <h2>New Brewery</h2>
             <div>
               <form action="/breweries" method="post">

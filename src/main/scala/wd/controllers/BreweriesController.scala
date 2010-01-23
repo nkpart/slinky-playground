@@ -22,7 +22,7 @@ class BreweriesController(val ds: DatastoreService)(implicit val request: Reques
   def handle(v: Action[String]): Option[Response[Stream]] = v ↦ (find _) >>= (handleB _)
   
   def handleB(v: Action[Keyed[Brewery]]): Option[Response[Stream]] = v match {
-    case New => render(breweries.nnew) η
+    case New => render(breweries.nu) η
 
     case rest.Show(brewery) => {
       val beers = brewery.beers(ds)
