@@ -50,6 +50,10 @@ object Scapps {
 
   def at(s: String*) = whenR(_.parts == s.toList)
 
+  // Matches paths of this form:
+  //   /a/:b/c
+  // Any part preceded by a : will be written into the query string.
+  //   ie. If constructed with /a/:b/c and hit with /a/5/c, (request ! "b") will be "5"
   def path(s: String) = {
     val parts = s.stripPrefix("/").stripSuffix("/").split("/")
 

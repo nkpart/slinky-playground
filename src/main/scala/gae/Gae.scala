@@ -4,6 +4,7 @@ import gae._
 import scala.collection.JavaConversions._
 
 package gae {
+
   trait Kind[T] {
     def kind: String
   }

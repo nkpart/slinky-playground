@@ -24,7 +24,7 @@ object Start extends BaseController {
     val v = (Brewery.allByName _) ∘ { breweries =>
         render(start.index(breweries))
     }
-    Database.runDb(v)
+    Database.runDb(v) 
   }
 }
 
@@ -43,14 +43,18 @@ final class WorthDrinkingServlet extends ServletApplicationServlet[Stream, Strea
       case _   => none
     }
   })
+  
+  implicit def mountR(base: String) = new {
+    def so(f: (Request[Stream] => Action[String] => Option[Response[Stream]])) = resource(base, f)
+  }
 
   def route(r: Request[Stream]): Option[Response[Stream]] = {
     val app = check(☆(admin _), login) {
       reduce(List(
-        at(Nil) >=> m(GET) >=> (r => Some(Start.go(r))),
-        resource("beers", (r => v => Database.runDb { ds => new BeersController(ds)(r).handle(v)})),
+        at(Nil) >=> m(GET) map (r => (Start.go(r))),
+        "beers" so (r => v => Database.runDb { ds => new BeersController(ds)(r).handle(v)}),
         resource("breweries", (r => v => Database.runDb { ds => new BreweriesController(ds)(r).handle(v)}))
-        ))
+      ))
     }
     app(r)
   }
