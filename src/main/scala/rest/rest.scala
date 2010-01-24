@@ -21,16 +21,6 @@ package object rest {
       case New => (New: Action[B]) η
       case Edit(v) => f(v) map { a => Edit(a) }
     }
-    
-    // override def fmap[A,B](a: Action[A], f: A => B): Action[B] = a match {
-    //   case Index => (Index: Action[B])
-    //   case Create => (Create: Action[B])
-    //   case Show(v) => Show(f(v))
-    //   case Update(v) => Update(f(v))
-    //   case Destroy(v) => Destroy(f(v))
-    //   case New => (New: Action[B])
-    //   case Edit(v) => Edit(f(v))
-    // }
   }
 }
 

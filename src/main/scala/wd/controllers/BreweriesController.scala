@@ -17,9 +17,9 @@ import wd.Brewery._
 
 class BreweriesController(val ds: DatastoreService)(implicit val request: Request[Stream]) extends Controller with ControllerHelpers {
   
-  def find(keyName: String): Option[Keyed[Brewery]] = Brewery.findById(keyName)(ds)
+  def find(key: Long): Option[Keyed[Brewery]] = ds.findById[Brewery](key)
   
-  def handle(v: Action[String]): Option[Response[Stream]] = v ↦ (find _) >>= (handleB _)
+  def handle(v: Action[String]): Option[Response[Stream]] = (v map ((_:String).toLong)) ↦ (find _) >>= (handleB _)
   
   def handleB(v: Action[Keyed[Brewery]]): Option[Response[Stream]] = v match {
     case New => render(breweries.nu) η
@@ -37,7 +37,7 @@ class BreweriesController(val ds: DatastoreService)(implicit val request: Reques
       val readB = request.create[Brewery]
       val saved: Posted[Keyed[Brewery]] = readB ∘ {brewery => {brewery.insert(ds)}}
       ((saved >| {redirectTo("/")}).fail ∘ {
-        (errors: List[NamedError]) =>
+        (errors: NonEmptyList[NamedError]) =>
           render(<p>No name.</p>)
       }).validation.fold(identity, identity)
     } η

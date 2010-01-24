@@ -9,7 +9,7 @@ import com.google.appengine.api.datastore.{DatastoreService, Key, Entity}
 import gae._
 import scapps.{RequestUpdate, RequestCreate}
 
-case class Beer(name: String, key: Option[Key]) {
+case class Beer(name: String) {
   def writeToEntity(e: Entity) {
     e.setProperty("name", name)
   }
@@ -18,7 +18,7 @@ case class Beer(name: String, key: Option[Key]) {
 object Beer {
   def fromEntity(e: Entity): Option[Keyed[Beer]] = {
     val name = Option(e.getProperty("name").asInstanceOf[String])
-    name map (n => Keyed(Beer(n, Option(e.getKey)), e.getKey))
+    name map (n => Keyed(Beer(n), e.getKey))
   }
 
   def all(ds: DatastoreService): Iterable[Keyed[Beer]] = {
@@ -30,19 +30,4 @@ object Beer {
   val Required = "%s is required."
 
   def required[IN[_] : FoldLeft](r: Request[IN])(s: String)(fmt: String) = r(s).toSuccess(s -> fmt.format(s))
-
-  implicit object requestCreate extends RequestCreate[Beer] {
-    def create[IN[_] : FoldLeft](r: Request[IN]) = {
-      val name = required(r)("name")(Required).fail.lift[List, (String, String)]
-      name ∘ {n => Beer(n, none)}
-    }
-  }
-
-  implicit object requestUpdate extends RequestUpdate[Beer] {
-    def update[IN[_] : FoldLeft](r: Request[IN])(beer: Beer) = {
-      val name = required(r)("name")(Required).fail.lift[List, (String, String)]
-      name ∘ {n => beer copy (name = n)} fold (err => (err, beer), br => (Nil, br))
-    }
-  }
-
 }

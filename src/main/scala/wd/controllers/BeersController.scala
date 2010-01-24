@@ -17,9 +17,9 @@ class BeersController(val ds: DatastoreService)(implicit val request: Request[St
   
   def handle(v: Action[String]) = v match {
     case New => Some {
-      val breweryId = request("breweryKey")
+      val breweryId = request("brewery_id") map (_.toLong)
       breweryId ∘ { id =>
-        ~(Brewery.findById(id)(ds) ∘ { brewery =>
+        ~(ds.findById[Brewery](id) ∘ { brewery =>
           render(beers.nu(Left(brewery)))
         })
       } getOrElse {
@@ -28,9 +28,9 @@ class BeersController(val ds: DatastoreService)(implicit val request: Request[St
     }
 
     case Create => Some {
-      val c = request.create[Beer].either.right.toOption
-      val breweryKey = request("brewery").get
-      val br = Brewery.findById(breweryKey)(ds)
+      val c: Option[Beer] = request.create[Beer].success
+      val breweryKey = request("brewery_id") map (_.toLong) get
+      val br = ds.findById[Brewery](breweryKey)
       val persisted = (c <×> br) map { case (beer, brk) => beer.insertWithParent(brk.key, ds) }
       render {
         <div>

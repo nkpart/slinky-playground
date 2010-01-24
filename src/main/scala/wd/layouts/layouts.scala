@@ -54,9 +54,9 @@ object start {
 object beers {
   def breweryChoice(choise: Either[Keyed[Brewery], Iterable[Keyed[Brewery]]]) = {
     choise.fold(
-      br => <input type="hidden" name="brewery" value={br.key.toString} />,
-      breweries => (<select name="brewery">
-                  { breweries flatMap (b => { <option value={b.key.toString}>{b.value.name}</option>  }) }
+      br => <input type="hidden" name="brewery_id" value={br.key.getId.toString} />,
+      breweries => (<select name="brewery_id">
+                  { breweries flatMap (b => { <option value={b.key.getId.toString}>{b.value.name}</option>  }) }
                 </select>)
       )
   }
@@ -86,7 +86,7 @@ object breweries {
     <hr />
     <div><small>
       <a href={brewery.rr.edit}>Edit</a> |
-    <a href={"/beers/new?breweryKey=%s" format brewery.key.getName}>Add beer</a>
+    <a href={"/beers/new?brewery_id=%s" format brewery.key.getId}>Add beer</a>
     </small></div>
   }
 
