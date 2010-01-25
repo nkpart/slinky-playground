@@ -23,7 +23,8 @@ class BeersController(val ds: DatastoreService)(implicit val request: Request[St
           render(beers.nu(Left(brewery)))
         })
       } getOrElse {
-        render(beers.nu(Right(Brewery.all(ds))))
+        val all: Iterable[Keyed[Brewery]] = Brewery.allByName(ds)
+        render(beers.nu(Right(all)))
       }
     }
 

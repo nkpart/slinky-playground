@@ -6,8 +6,9 @@ import scalaz._
 import Scalaz._
 
 package gae {
+import wd.Beer
 
-  trait Kind[T] {
+trait Kind[T] {
     def kind: String
   }
 
@@ -37,6 +38,12 @@ package gae {
       val e = keyFor.createEntity(value, None)
       ew.write(value, e)
       Keyed(value, ds.put(e))
+    }
+
+    def children[T](ds: DatastoreService)(implicit ec: EntityCreatable[T], k: Kind[T]): Iterable[Keyed[T]] = {
+      gae.query[T](ds) { qry =>
+        qry.setAncestor(this.key)
+      }
     }
   }
   
@@ -71,7 +78,10 @@ package gae {
   trait RichDatastoreService {
     val ds: DatastoreService
 
-
+    def all[T](implicit k : Kind[T], ec: EntityCreatable[T]) : Iterable[Keyed[T]] = {
+      val es: Iterable[Entity] = ds.prepare(createQuery[T]).asIterable
+      es flatMap (e => (entityTo(e).create[T]))
+    }
 
     def findById[T](id: Long)(implicit k: Kind[T], ec: EntityCreatable[T]): Option[Keyed[T]] = {
       val key = createKey[T](id)
@@ -97,9 +107,9 @@ package object gae {
 
   def createQuery[T](implicit s: Kind[T]) = new Query(s.kind)
   
-  def query[T](ds: DatastoreService)(f: Query => Query)(implicit s: Kind[T]): Iterable[Entity] = {
+  def query[T](ds: DatastoreService)(f: Query => Query)(implicit s: Kind[T], ec: EntityCreatable[T]): Iterable[Keyed[T]] = {
     val qry = createQuery[T]
-    ds.prepare(f(qry)).asIterable
+    ds.prepare(f(qry)).asIterable flatMap (e => e.create[T])
   }
   
   def createKey[T](name: String)(implicit s : Kind[T]) = KeyFactory.createKey(s.kind, name)

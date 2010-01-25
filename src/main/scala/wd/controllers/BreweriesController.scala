@@ -22,24 +22,22 @@ class BreweriesController(val ds: DatastoreService)(implicit val request: Reques
   def handle(v: Action[String]): Option[Response[Stream]] = (v map ((_:String).toLong)) ↦ (find _) >>= (handleB _)
   
   def handleB(v: Action[Keyed[Brewery]]): Option[Response[Stream]] = v match {
-    case New => render(breweries.nu) η
+    case New => render(breweries.nu()) η
 
     case rest.Show(brewery) => {
-      val beers = brewery.beers(ds)
+      val beers = brewery.children[Beer](ds)
       render(breweries.show(brewery, beers))
     } η
 
-    case Edit(brewery) => {
-      render(breweries.edit(brewery, Nil))
-    } η
+    case Edit(brewery) => { render(breweries.edit(brewery, Nil)) } η
 
     case Create => {
       val readB = request.create[Brewery]
       val saved: Posted[Keyed[Brewery]] = readB ∘ {brewery => {brewery.insert(ds)}}
       ((saved >| {redirectTo("/")}).fail ∘ {
         (errors: NonEmptyList[NamedError]) =>
-          render(<p>No name.</p>)
-      }).validation.fold(identity, identity)
+          render(breweries.nu(errors.list))
+      }).validation.either.merge
     } η
 
     case Update(brewery) => {

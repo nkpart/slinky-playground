@@ -16,18 +16,7 @@ import scapps.{RequestCreate, RequestUpdate}
 case class Brewery(name: String)//, country: Country, isPub: Boolean)
 
 object Brewery {
-  implicit def lookupBeers(kb: Keyed[Brewery]) = new {
-    def beers(ds: DatastoreService): Iterable[Keyed[Beer]] = {
-      query[Beer](ds) { qry =>
-        qry.setAncestor(kb.key)
-      } flatMap (Beer.fromEntity _)
-    }
-  }
-  
-  def all(ds : DatastoreService) = Queries.all[Brewery](_.create[Brewery], ds)
-  
   def allByName(ds : DatastoreService): Iterable[Keyed[Brewery]] = {
-    val qry = createQuery[Brewery].addSort("name", SortDirection.ASCENDING)
-    ds.prepare(qry).asIterable flatMap(_.create[Brewery])
+    query[Brewery](ds) { _.addSort("name", SortDirection.ASCENDING) }
   }
 }

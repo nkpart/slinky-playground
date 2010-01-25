@@ -5,6 +5,8 @@ import xml.NodeSeq
 import com.google.appengine.api.users.{UserService, User}
 import gae._
 import rest._
+import scalaz._
+import Scalaz._
 import scalaz.http.request.PUT
 
 // TODO package object, couldn't get it to work last time
@@ -90,9 +92,16 @@ object breweries {
     </small></div>
   }
 
-  def nu: NodeSeq = {
+  def nu(errors: List[(String, String)] = Nil): NodeSeq = {
     <h2>New Brewery</h2>
             <div>
+              { ~((!errors.isEmpty).option(errors) map { errors => {
+                <div id="errors">
+                  <dl>
+                    { errors map { case (k, v) => <dt>{k}</dt><dd>{v}</dd> } }
+                  </dl>
+                </div>
+              }}) }
               <form action="/breweries" method="post">
                 <label for="name">Name:</label>
                   <input type="text" name="name"/>

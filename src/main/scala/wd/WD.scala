@@ -74,4 +74,11 @@ package object wd extends RichRequests {
       name map (n => Brewery(n))
     }
   }
+
+  implicit def createFromBeerEntity: EntityCreatable[Beer] = new EntityCreatable[Beer] {
+    def createFrom(e: Entity): Option[Beer] = {
+      val name = Option(e.getProperty("name").asInstanceOf[String])
+      name map (n => Beer(n))
+    }
+  }
 }
