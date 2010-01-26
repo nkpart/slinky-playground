@@ -10,10 +10,10 @@ import scapps.{RequestCreate, RequestUpdate}
 
 // Location
 // * full address.
-// * country
 // isPub
 
-case class Brewery(name: String)//, country: Country, isPub: Boolean)
+case class Country(value: String)
+case class Brewery(name: String, country: Country)
 
 object Brewery {
   def allByName(ds : DatastoreService): Iterable[Keyed[Brewery]] = {

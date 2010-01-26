@@ -29,17 +29,18 @@ class BeersController(val ds: DatastoreService)(implicit val request: Request[St
     }
 
     case Create => Some {
-      val c: Option[Beer] = request.create[Beer].success
+      val readB = request.create[Beer]
       val breweryKey = request("brewery_id") map (_.toLong) get
-      val br = ds.findById[Brewery](breweryKey)
-      val persisted = (c <×> br) map { case (beer, brk) => beer.insertWithParent(brk.key, ds) }
-      render {
-        <div>
-          <p>
-            {c}
-          </p>
-        </div>
-      }
+      val br = ds.findById[Brewery](breweryKey).toSuccess(("brewery" -> "Unknown brewery").wrapNel)
+      val persisted = (readB <×> br) map { case (beer, brk) => {
+        val inserted = beer.insertWithParent(brk.key, ds)
+        redirectTo(brk.rr.show)
+      }}
+
+      persisted fold ({errors => 
+        val all: Iterable[Keyed[Brewery]] = Brewery.allByName(ds)
+        render(beers.nu(Right(all)))
+      }, identity)
     }
 
     case _ => none

@@ -32,12 +32,14 @@ package object wd extends RichRequests {
   implicit object breweryEntityThing extends EntityWriteable[wd.Brewery] {
     def write(b: Brewery, e: Entity) {
       e.setProperty("name", b.name)
+      e.setProperty("country", b.country.value)
     }
   }
   
   implicit object beerEntityThing extends EntityWriteable[wd.Beer] {
     def write(b: Beer, e: Entity) {
       e.setProperty("name", b.name)
+      e.setProperty("style", b.style.value)
     }
   }
   
@@ -46,12 +48,14 @@ package object wd extends RichRequests {
 
     def create[IN[_] : FoldLeft](r: Request[IN]) = {
       val name = required(r)("name")(Required)
-      name ∘ { Brewery.apply _ }
+      val country = required(r)("country")(Required)
+      (name <×> country) ∘ { case (n,c) => Brewery(n, Country(c)) }
     }
 
     def update[IN[_]: FoldLeft](r: Request[IN])(brewery: Brewery) = {
       val name = required(r)("name")(Required)
-      name ∘ { n => brewery copy (name = n) } fold (errs => (errs.list, brewery), (Nil, _))
+      val country = required(r)("country")(Required)
+      (name <×> country) ∘ { case (n,c) => brewery copy (name = n, country = Country(c)) } fold (errs => (errs.list, brewery), (Nil, _))
     }
   }
 
@@ -60,26 +64,27 @@ package object wd extends RichRequests {
     
     def create[IN[_] : FoldLeft](r: Request[IN]) = {
       val name = required(r)("name")(Required)
-      name ∘ {n => Beer(n)}
+      val style = required(r)("style")(Required)
+      (name <×> style) map { case (n,s) => Beer(n, Style(s))}
     }
 
     def update[IN[_] : FoldLeft](r: Request[IN])(beer: Beer) = {
       val name = required(r)("name")(Required)
-      name ∘ {n => beer copy (name = n)} fold (err => (err.list, beer), br => (Nil, br))
+      val style = required(r)("style")(Required)
+      
+      (name <×> style) map { case (n,s) => beer copy (name = n, style = Style(s))} fold (err => (err.list, beer), br => (Nil, br))
+    }
+  } 
+
+  def entityCreate2[T, A, B](cons: (A, B) => T, fields: (String, String)): EntityCreatable[T] = new EntityCreatable[T] {
+    def createFrom(e: Entity): Option[T] = {
+      val va = Option(e.getProperty(fields._1).asInstanceOf[A])
+      val vb = Option(e.getProperty(fields._2).asInstanceOf[B])
+      (va <×> vb) map cons.tupled
     }
   }
 
-  implicit def createFromEntity: EntityCreatable[Brewery] = new EntityCreatable[Brewery] {
-    def createFrom(e: Entity): Option[Brewery] = {
-      val name = Option(e.getProperty("name").asInstanceOf[String])
-      name map (n => Brewery(n))
-    }
-  }
-
-  implicit def createFromBeerEntity: EntityCreatable[Beer] = new EntityCreatable[Beer] {
-    def createFrom(e: Entity): Option[Beer] = {
-      val name = Option(e.getProperty("name").asInstanceOf[String])
-      name map (n => Beer(n))
-    }
-  }
+  implicit def createBrewery: EntityCreatable[Brewery] = entityCreate2(Brewery.apply _, ("name", "country"))  
+  
+  implicit val createFromBeerEntity: EntityCreatable[Beer] = entityCreate2(Beer.apply _, ("name", "style"))
 }

@@ -24,7 +24,7 @@ object layouts {
         <link rel="stylesheet" href="/main.css" />
       </head>
       <body>
-        <h1>Beer Engine.</h1>
+        <h1>Beer Engine<a href="/">.</a></h1>
         { content }
         <div>{us.currentUser} : <a href={us.createLogoutURL("/")}>logout</a></div>
       </body>
@@ -79,6 +79,7 @@ object beers {
 object breweries {
   def show(brewery: Keyed[Brewery], beers: Iterable[Keyed[Beer]]) = {
     <h2>{brewery.value.name}</h2>
+    <h3>{brewery.value.country.value}</h3>
     <hr />
     <ul>
       { beers.map { beer =>
@@ -103,9 +104,13 @@ object breweries {
                 </div>
               }}) }
               <form action="/breweries" method="post">
-                <label for="name">Name:</label>
-                  <input type="text" name="name"/>
-                  <input type="submit"/>
+                <dl>
+                  <dt><label for="name">Name:</label></dt>
+                  <dd><input type="text" name="name"/></dd>
+                  <dt><label for="name">Country:</label></dt>
+                  <dd><input type="text" name="country"/></dd>
+                </dl>
+                <input type="submit"/>
               </form>
             </div>
   }
@@ -116,6 +121,7 @@ object breweries {
       <form action={brewery.rr.show} method="post">
         <input type="hidden" name="_method" value={PUT} />
         <input type="text" name="name" value={brewery.value.name} />
+        <input type="text" name="country" value={brewery.value.country.value} />
         <input type="submit" />
       </form>
      </div>

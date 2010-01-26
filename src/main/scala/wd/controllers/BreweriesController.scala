@@ -33,11 +33,11 @@ class BreweriesController(val ds: DatastoreService)(implicit val request: Reques
 
     case Create => {
       val readB = request.create[Brewery]
-      val saved: Posted[Keyed[Brewery]] = readB ∘ {brewery => {brewery.insert(ds)}}
-      ((saved >| {redirectTo("/")}).fail ∘ {
-        (errors: NonEmptyList[NamedError]) =>
-          render(breweries.nu(errors.list))
-      }).validation.either.merge
+      val saved = readB ∘ (_.insert(ds))
+      
+      saved fold ({errors => 
+        render(breweries.nu(errors.list))
+      }, _ => redirectTo("/"))
     } η
 
     case Update(brewery) => {
