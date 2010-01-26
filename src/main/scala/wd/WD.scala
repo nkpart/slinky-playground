@@ -6,27 +6,28 @@ import Scalaz._
 import scapps._
 import scalaz.http.request._
 import wd.{Brewery, Beer}
+import prohax.Inflector._
 
 package object wd extends RichRequests {
   type DB[T] = (DatastoreService => T)
   //TODO move to scapps
   type NamedError = (String, String)
   type Posted[T] = Validation[NonEmptyList[NamedError], T]
+
+  def UnnamedClassKeyFor[T](implicit m: ClassManifest[T]) = new KeyFor[T] {
+    def kind = m.erasure.getSimpleName
+    def keyName(t: T) = None
+  }
   
-  implicit val beerKey = new KeyFor[wd.Beer] {
-    def kind = "Beer"
-    def keyName(bb: wd.Beer) = None
+  def KeyedResource[T](implicit m: ClassManifest[T]) = new Resourced[Keyed[T]] {
+    val resource: Resource = Resource(m.erasure.getSimpleName.toLowerCase.pluralize)
+    def id(kt: Keyed[T]): String = kt.key.getId.shows
   }
 
-  implicit val breweryKey = new KeyFor[wd.Brewery] {
-    def kind = "Brewery"
-    def keyName(b: wd.Brewery) = None
-   }
-
-  implicit def br = new Resourced[Keyed[Brewery]] {
-    val resource: Resource = Resource("breweries")
-    def id(br: Keyed[Brewery]): String = br.key.getId.shows
-  }
+  implicit val beerKey = UnnamedClassKeyFor[wd.Beer]
+  implicit val breweryKey = UnnamedClassKeyFor[wd.Brewery]
+  
+  implicit def br = KeyedResource[Brewery]
   
   implicit object breweryEntityThing extends EntityWriteable[wd.Brewery] {
     def write(b: Brewery, e: Entity) {

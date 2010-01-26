@@ -51,11 +51,11 @@ case class Context(resource: String, id: String)
 case class RestRequest[T](contexts: List[Context], resource: String, base: Action[T], contentType: Option[String])
 
 case class Resource(name: String) {
-  def show(id: String) = "/" + name + "/" + id
+  def show(id: String) = index + "/" + id
 
   def edit(id: String) = show(id) + "/edit"
 
-  def index = name
+  def index = "/" + name
 }
 
 trait Resourced[T] {
@@ -66,5 +66,7 @@ trait Resourced[T] {
   def show(t: T): String = resource.show(id(t))
 
   def edit(t: T): String = resource.edit(id(t))
+
+  def index: String = resource.index
 }
 }

@@ -9,6 +9,7 @@ import scalaz.http.request.Request
 
 object Database {
   type DB[T] = (DatastoreService => T)
+  
   private def datastore = DatastoreServiceFactory.getDatastoreService
   
   def runDb[T](f : DB[T]) : T = f(datastore)

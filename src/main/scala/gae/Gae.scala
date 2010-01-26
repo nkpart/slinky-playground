@@ -8,7 +8,7 @@ import Scalaz._
 package gae {
 import wd.Beer
 
-trait Kind[T] {
+  trait Kind[T] {
     def kind: String
   }
 
@@ -34,8 +34,8 @@ trait Kind[T] {
   }
   
   case class Keyed[T](value: T,key: Key) {
-    def save(ds: DatastoreService)(implicit keyFor: KeyFor[T], ew: EntityWriteable[T]): Keyed[T] = {
-      val e = keyFor.createEntity(value, None)
+    def save(ds: DatastoreService)(implicit ew: EntityWriteable[T]): Keyed[T] = {
+      val e = new Entity(key)
       ew.write(value, e)
       Keyed(value, ds.put(e))
     }

@@ -59,6 +59,11 @@ final class WorthDrinkingServlet extends ServletApplicationServlet[Stream, Strea
     app(r)
   }
 
+  override def init() = {
+    println("servlet init")
+    prohax.Bootstrap.defineInflections_!
+  }
+  
   def apply(implicit servlet: HttpServlet, servletRequest: HttpServletRequest, request: Request[Stream]) = {
     println(MethodParts.unapply(request))
     route(Scapps.methodHax[Stream].apply(request)) getOrElse HttpServlet.resource(x => OK << x.toStream, NotFound.xhtml)
