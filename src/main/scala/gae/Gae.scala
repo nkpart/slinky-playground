@@ -32,7 +32,7 @@ import wd.Beer
   case class RichUserService(us: UserService) {
     def currentUser: Option[User] = Option(us.getCurrentUser)
   }
-  
+
   case class Keyed[T](value: T,key: Key) {
     def save(ds: DatastoreService)(implicit ew: EntityWriteable[T]): Keyed[T] = {
       val e = new Entity(key)
@@ -41,35 +41,35 @@ import wd.Beer
     }
 
     def children[T](ds: DatastoreService)(implicit ec: EntityCreatable[T], k: Kind[T]): Iterable[Keyed[T]] = {
-      gae.query[T](ds) { qry =>
+      ds.query[T] { qry =>
         qry.setAncestor(this.key)
       }
     }
   }
-  
+
   trait GaeIdentity[T] {
     val value: T
-    
+
     def insert(ds: DatastoreService)(implicit ew: EntityWriteable[T], stored: KeyFor[T]): Keyed[T] = {
       val newKey = ds.put(entity(value,value, None))
       Keyed(value, newKey)
     }
-    
+
     def insertWithParent(parentKey: Key, ds: DatastoreService)(implicit ew: EntityWriteable[T], stored: KeyFor[T]): Keyed[T] = {
       val newKey = ds.put(entity(value,value, Some(parentKey)))
       Keyed(value, newKey)
     }
-    
+
     private def entity[KT, VT](kt: KT, vt: VT, parentKey: Option[Key])(implicit key: KeyFor[KT], ew: EntityWriteable[VT])= {
       val e = key.createEntity(kt, parentKey)
       ew.write(vt, e)
       e
     }
   }
-  
+
   trait RichEntity {
     val entity: Entity
-    
+
     def create[T](implicit ec: EntityCreatable[T]): Option[Keyed[T]] = {
       Option(entity.getKey) >>= { key => ec.createFrom(entity) map { t => Keyed(t, key) } }
     }
@@ -87,6 +87,11 @@ import wd.Beer
       val key = createKey[T](id)
       Option(ds.get(key)) >>= (entityTo(_).create[T])
     }
+
+    def query[T](f: Query => Query)(implicit s: Kind[T], ec: EntityCreatable[T]): Iterable[Keyed[T]] = {
+      val qry = createQuery[T]
+      ds.prepare(f(qry)).asIterable flatMap (e => e.create[T])
+    }
   }
 }
 
@@ -97,7 +102,7 @@ package object gae {
   implicit def datastoreFrom[T](t: RichDatastoreService): DatastoreService = t.ds
   implicit def entityTo(en: Entity) = new RichEntity { val entity = en }
   implicit def entityFrom(re: RichEntity) = re.entity
-  
+
   implicit def richUserServiceTo(us: UserService): RichUserService = RichUserService(us)
   implicit def richUserServiceFrom(us: RichUserService): UserService = us.us
 
@@ -106,12 +111,7 @@ package object gae {
   def classKind[T](implicit m: ClassManifest[T]): String = m.erasure.getName
 
   def createQuery[T](implicit s: Kind[T]) = new Query(s.kind)
-  
-  def query[T](ds: DatastoreService)(f: Query => Query)(implicit s: Kind[T], ec: EntityCreatable[T]): Iterable[Keyed[T]] = {
-    val qry = createQuery[T]
-    ds.prepare(f(qry)).asIterable flatMap (e => e.create[T])
-  }
-  
+
   def createKey[T](name: String)(implicit s : Kind[T]) = KeyFactory.createKey(s.kind, name)
   def createKey[T](id: Long)(implicit s : Kind[T]) = KeyFactory.createKey(s.kind, id)
 }

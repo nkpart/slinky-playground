@@ -17,6 +17,6 @@ case class Brewery(name: String, country: Country)
 
 object Brewery {
   def allByName(ds : DatastoreService): Iterable[Keyed[Brewery]] = {
-    query[Brewery](ds) { _.addSort("name", SortDirection.ASCENDING) }
+    ds.query[Brewery] { _.addSort("name", SortDirection.ASCENDING) }
   }
 }
