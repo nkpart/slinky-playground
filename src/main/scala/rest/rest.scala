@@ -1,8 +1,23 @@
 import rest.Resourced
 import scalaz._
+import http.request._
+import http.response._
+import http.request.Request._
 import Scalaz._
 
 package object rest {
+  
+  def resource(base: String, f: (Request[Stream] => Action[String] => Option[Response[Stream]])) = ☆((r: Request[Stream]) => {
+    r.action match {
+      case Some((b, action)) if b == base => f(r)(action)
+      case _   => none
+    }
+  })
+  
+  implicit def mountR(base: String) = new {
+    def /(f: (Request[Stream] => Action[String] => Option[Response[Stream]])) = resource(base, f)
+  }
+  
   implicit def showMe[T](t: T)(implicit r: Resourced[T]) = new {
     def rr = new {
       def show = r.show(t)
@@ -20,6 +35,21 @@ package object rest {
       case Destroy(v) => f(v) map { a => Destroy(a) }
       case New => (New: Action[B]) η
       case Edit(v) => f(v) map { a => Edit(a) }
+    }
+  }
+  
+  implicit def requestAction[IN[_]](request: Request[IN]) = new {
+    lazy val action: Option[(String, Action[String])] = {
+      request match {
+        case MethodParts(GET, List(base)) => Some((base, rest.Index))
+        case MethodParts(GET, List(base, "new")) => Some((base, New))
+        case MethodParts(GET, List(base, id)) => Some((base, rest.Show(id)))
+        case MethodParts(POST, List(base)) => Some((base, Create))
+        case MethodParts(GET, List(base, id, "edit")) => Some((base, Edit(id)))
+        case MethodParts(PUT, List(base, id)) => Some((base, Update(id)))
+        case MethodParts(DELETE, List(base, id)) => Some((base, Destroy(id)))
+        case _ => none
+      }
     }
   }
 }

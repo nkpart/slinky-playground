@@ -9,13 +9,23 @@ import scalaz._
 import Scalaz._
 import scalaz.http.request.PUT
 
+trait RestHelpers {
+  def createForm[T](xml: NodeSeq)(implicit resourced: Resourced[T]): NodeSeq = {
+    <form method="post" action={resourced.index}>
+      { xml }
+    </form>
+  }
+  
+  def editForm[T](t: T)(xml: NodeSeq)(implicit resourced: Resourced[T]): NodeSeq = {
+    <form method="post" action={t.rr.show}>
+      <input type="hidden" name="_method" value={PUT} />
+      { xml }
+    </form>
+  }
+}
+
 // TODO package object, couldn't get it to work last time
 object layouts {
-  val css = """
-* {
-  font-family: Helvetica
-}
-  """
 
   def main(us: UserService)(content: NodeSeq): NodeSeq = {
     <html>
@@ -24,37 +34,66 @@ object layouts {
         <link rel="stylesheet" href="/main.css" />
       </head>
       <body>
-        <h1>Beer Engine<a href="/">.</a></h1>
+        <div id="strip">
+          {us.currentUser} : <a href={us.createLogoutURL("/")}>logout</a>
+        </div>
+        <div id="content">
+        <h1 id="heading">Beer Engine<a href="/">.</a></h1>
+        <div id="search_box">
+          <form action="/search" method="get">
+              <div><input id="search" type="text" name="qry" value=""/></div>
+              <div><input id="search_submit" type="Submit" value="Search" /></div>
+          </form>
+        </div>
+        <hr />
         { content }
-        <div>{us.currentUser} : <a href={us.createLogoutURL("/")}>logout</a></div>
+        </div>
       </body>
     </html>
   }
 }
 
-object start {
+object start extends RestHelpers {
+  val menu = {
+    <div>
+      <a href="/breweries/new">New brewery</a> | 
+      <a href="/beers/new">New beer</a> |
+      <a href="/config">Config</a>
+    </div>
+  }
+  
   def index(breweries: Iterable[Keyed[Brewery]]): NodeSeq = {
     <div>
-      <form action="/search" method="get">
-          Search: <input type="text" name="qry" value=" "/>
-      </form>
-    </div>
-    <hr />
-    <div>
-      <a href="/breweries/new">Add brewery</a> | <a href="/beers/new">Add beer</a>
-    </div>
-
+    { menu }
     <h3>Breweries</h3>
     <ul>
       { breweries.map { brewery =>
         <li><a href={ brewery.rr.show }>{ brewery.value.name }</a></li>
       } }
     </ul>
+    </div>
+  }
+  
+  def config(styles: List[Style]) = {
+    <table border="0" cellpadding="0">
+      <thead>
+        <th>Styles</th>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+        { styles map { s =>
+          <div>{s}</div>
+        }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
   }
 }
 
-object beers {
-  def breweryChoice(choise: Either[Keyed[Brewery], Iterable[Keyed[Brewery]]]) = {
+object beers extends RestHelpers {
+  def breweryChoice(choise: Either[Keyed[Brewery], Iterable[Keyed[Brewery]]]): NodeSeq = {
     choise.fold(
       br => <input type="hidden" name="brewery_id" value={br.key.getId.toString} />,
       breweries => (<select name="brewery_id">
@@ -66,17 +105,18 @@ object beers {
   def nu(breweries: Either[Keyed[Brewery], Iterable[Keyed[Brewery]]]): NodeSeq = {
     <h2>New Beer</h2>
             <div>
-              <form action="/beers" method="post">
-                <label for="name">Name:</label>
+              { createForm[Keyed[Beer]] {
+                  <div><label for="name">Name:</label>
                   <input type="text" name="name"/>
-                { breweryChoice(breweries) }
-                  <input type="submit"/>
-              </form>
+                  { breweryChoice(breweries) }
+                  <a href="/">Cancel</a> <input type="submit"/>
+                  </div>
+              }}
             </div>
   }
 }
 
-object breweries {
+object breweries extends RestHelpers {
   def show(brewery: Keyed[Brewery], beers: Iterable[Keyed[Beer]]) = {
     <h2>{brewery.value.name}</h2>
     <h3>{brewery.value.country.value}</h3>
@@ -103,27 +143,26 @@ object breweries {
                   </dl>
                 </div>
               }}) }
-              <form action="/breweries" method="post">
+              {createForm[Keyed[Brewery]] {
                 <dl>
                   <dt><label for="name">Name:</label></dt>
                   <dd><input type="text" name="name"/></dd>
                   <dt><label for="name">Country:</label></dt>
                   <dd><input type="text" name="country"/></dd>
                 </dl>
-                <input type="submit"/>
-              </form>
+                <a href="/">Cancel</a> <input type="submit"/>
+              }}
             </div>
   }
 
   def edit(brewery: Keyed[Brewery], errors: List[(String, String)]): NodeSeq = {
     <h2>Changing {brewery.value.name}</h2>
     <div>
-      <form action={brewery.rr.show} method="post">
-        <input type="hidden" name="_method" value={PUT} />
+      {editForm(brewery) {
         <input type="text" name="name" value={brewery.value.name} />
         <input type="text" name="country" value={brewery.value.country.value} />
         <input type="submit" />
-      </form>
+      }}
      </div>
   }
 }

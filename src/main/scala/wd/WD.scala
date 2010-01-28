@@ -5,7 +5,7 @@ import scalaz._
 import Scalaz._
 import scapps._
 import scalaz.http.request._
-import wd.{Brewery, Beer}
+import wd.{Brewery, Beer, Style, Country}
 import prohax.Inflector._
 
 package object wd extends RichRequests {
@@ -27,7 +27,8 @@ package object wd extends RichRequests {
   implicit val beerKey = UnnamedClassKeyFor[wd.Beer]
   implicit val breweryKey = UnnamedClassKeyFor[wd.Brewery]
   
-  implicit def br = KeyedResource[Brewery]
+  implicit def breweryR = KeyedResource[Brewery]
+  implicit def beerR = KeyedResource[Beer]
   
   implicit object breweryEntityThing extends EntityWriteable[wd.Brewery] {
     def write(b: Brewery, e: Entity) {
@@ -49,13 +50,13 @@ package object wd extends RichRequests {
     def create[IN[_] : FoldLeft](r: Request[IN]) = {
       val name = required(r)("name")(Required)
       val country = required(r)("country")(Required)
-      (name <×> country) ∘ { case (n,c) => Brewery(n, Country(c)) }
+      (name <|*|> country) ∘ { case (n,c) => Brewery(n, Country(c)) }
     }
 
     def update[IN[_]: FoldLeft](r: Request[IN])(brewery: Brewery) = {
       val name = required(r)("name")(Required)
       val country = required(r)("country")(Required)
-      (name <×> country) ∘ { case (n,c) => brewery copy (name = n, country = Country(c)) } fold (errs => (errs.list, brewery), (Nil, _))
+      (name <|*|> country) ∘ { case (n,c) => brewery copy (name = n, country = Country(c)) } fold (errs => (errs.list, brewery), (Nil, _))
     }
   }
 
@@ -65,14 +66,14 @@ package object wd extends RichRequests {
     def create[IN[_] : FoldLeft](r: Request[IN]) = {
       val name = required(r)("name")(Required)
       val style = required(r)("style")(Required)
-      (name <×> style) map { case (n,s) => Beer(n, Style(s))}
+      (name <|*|> style) map { case (n,s) => Beer(n, Style(s))}
     }
 
     def update[IN[_] : FoldLeft](r: Request[IN])(beer: Beer) = {
       val name = required(r)("name")(Required)
       val style = required(r)("style")(Required)
       
-      (name <×> style) map { case (n,s) => beer copy (name = n, style = Style(s))} fold (err => (err.list, beer), br => (Nil, br))
+      (name <|*|> style) map { case (n,s) => beer copy (name = n, style = Style(s))} fold (err => (err.list, beer), br => (Nil, br))
     }
   } 
 
@@ -80,11 +81,10 @@ package object wd extends RichRequests {
     def createFrom(e: Entity): Option[T] = {
       val va = Option(e.getProperty(fields._1).asInstanceOf[A])
       val vb = Option(e.getProperty(fields._2).asInstanceOf[B])
-      (va <×> vb) map cons.tupled
+      (va <|*|> vb) map cons.tupled
     }
   }
 
-  implicit def createBrewery: EntityCreatable[Brewery] = entityCreate2(Brewery.apply _, ("name", "country"))  
-  
-  implicit val createFromBeerEntity: EntityCreatable[Beer] = entityCreate2(Beer.apply _, ("name", "style"))
+  implicit val createBrewery: EntityCreatable[Brewery] = entityCreate2(Brewery.apply _, ("name", "country"))  
+  implicit val createBeer: EntityCreatable[Beer] = entityCreate2(Beer.apply _, ("name", "style"))
 }

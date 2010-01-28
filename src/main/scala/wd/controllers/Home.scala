@@ -11,6 +11,7 @@ import scalaz.http.Slinky._
 import scalaz.http.response._
 import scalaz.http.response.Response._
 import com.google.appengine.api.users.{UserServiceFactory}
+import com.google.appengine.api.datastore.{DatastoreService}
 import scalaz.{Index => _}
 import scapps.Scapps._
 import rest._
@@ -19,48 +20,43 @@ import views._
 import scapps.RichRequest._
 import scapps._
 
-object Start extends BaseController {
-  def go(implicit request: Request[Stream]) = {
+case class Start(ds: DatastoreService) extends BaseController {
+  def root(implicit request: Request[Stream]) = {
     val v = (Brewery.allByName _) ∘ { breweries =>
         render(start.index(breweries))
     }
     Database.runDb(v) 
   }
+  
+  def config(implicit request: Request[Stream]) = {
+    val styles = List(Style("a"))
+    render(start.config(styles))
+  }
 }
 
 final class WorthDrinkingServlet extends ServletApplicationServlet[Stream, Stream] {
+  
   def userService = UserServiceFactory.getUserService
 
-  def admin(request: Request[Stream]): Option[Request[Stream]] = userService.currentUser >| request
-
-  def redirectTo(l: String)(implicit r: Request[Stream]): Response[Stream] = Response.redirects(l)
-
+  val loggedIn = ☆(userService.currentUser >| (_:Request[Stream]))
   val login = ((r: Request[Stream]) => redirectTo(userService.createLoginURL("/"))(r)).kleisli[Option]
-
-  def resource(base: String, f: (Request[Stream] => Action[String] => Option[Response[Stream]])) = ☆((r: Request[Stream]) => {
-    r.action match {
-      case Some((b, action)) if b == base => f(r)(action)
-      case _   => none
-    }
-  })
   
-  implicit def mountR(base: String) = new {
-    def /(f: (Request[Stream] => Action[String] => Option[Response[Stream]])) = resource(base, f)
-  }
-
-  def route(r: Request[Stream]): Option[Response[Stream]] = {
-    val app = check(☆(admin _), login) {
+  def redirectTo(l: String)(implicit r: Request[Stream]): Response[Stream] = Response.redirects(l)
+  
+  val route: Request[Stream] => Option[Response[Stream]] = {
+    import Database._
+    
+    check(loggedIn, login) {
       reduce(List(
-        at(Nil) >=> m(GET) map (r => (Start.go(r))),
-        "beers" / (r => v => Database.runDb { ds => new BeersController(ds)(r).handle(v)}),
-        "breweries" / (r => v => Database.runDb { ds => new BreweriesController(ds)(r).handle(v)})
+        at(Nil) >=> m(GET) map (r => runDb(ds => Start(ds).root(r))),
+        at("config") >=> m(GET) map (r => runDb(ds => Start(ds).config(r))),
+        "beers" / (r => v => runDb { ds => new BeersController(ds)(r).handle(v)}),
+        "breweries" / (r => v => runDb { ds => new BreweriesController(ds)(r).handle(v)})
       ))
     }
-    app(r)
   }
 
   override def init() = {
-    println("servlet init")
     prohax.Bootstrap.defineInflections_!
   }
   

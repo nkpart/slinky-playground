@@ -32,7 +32,7 @@ class BeersController(val ds: DatastoreService)(implicit val request: Request[St
       val readB = request.create[Beer]
       val breweryKey = request("brewery_id") map (_.toLong) get
       val br = ds.findById[Brewery](breweryKey).toSuccess(("brewery" -> "Unknown brewery").wrapNel)
-      val persisted = (readB <×> br) map { case (beer, brk) => {
+      val persisted = (readB <|*|> br) map { case (beer, brk) => {
         val inserted = beer.insertWithParent(brk.key, ds)
         redirectTo(brk.rr.show)
       }}
