@@ -14,7 +14,7 @@ package object wd extends RichRequests {
   type NamedError = (String, String)
   type Posted[T] = Validation[NonEmptyList[NamedError], T]
 
-  def UnnamedClassKeyFor[T](implicit m: ClassManifest[T]) = new KeyFor[T] {
+  def UnnamedClassEntityBase[T](implicit m: ClassManifest[T]) = new EntityBase[T] {
     def kind = m.erasure.getSimpleName
     def keyName(t: T) = None
   }
@@ -24,8 +24,8 @@ package object wd extends RichRequests {
     def id(kt: Keyed[T]): String = kt.key.getId.shows
   }
 
-  implicit val beerKey = UnnamedClassKeyFor[wd.Beer]
-  implicit val breweryKey = UnnamedClassKeyFor[wd.Brewery]
+  implicit val beerKey = UnnamedClassEntityBase[wd.Beer]
+  implicit val breweryKey = UnnamedClassEntityBase[wd.Brewery]
   
   implicit def breweryR = KeyedResource[Brewery]
   implicit def beerR = KeyedResource[Beer]
@@ -85,6 +85,11 @@ package object wd extends RichRequests {
     }
   }
 
-  implicit val createBrewery: EntityCreatable[Brewery] = entityCreate2(Brewery.apply _, ("name", "country"))  
+
+  implicit val createBrewery: EntityCreatable[Brewery] = entityCreate2[Brewery, String, String](
+    (n,c) => { Brewery(n, Country(c)) },
+    ("name", "country")
+  )
+    
   implicit val createBeer: EntityCreatable[Beer] = entityCreate2(Beer.apply _, ("name", "style"))
 }

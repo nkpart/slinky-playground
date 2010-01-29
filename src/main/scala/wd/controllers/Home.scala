@@ -22,7 +22,7 @@ import scapps._
 
 case class Start(ds: DatastoreService) extends BaseController {
   def root(implicit request: Request[Stream]) = {
-    val v = (Brewery.allByName _) ∘ { breweries =>
+    val v = Brewery.allByName ∘ { breweries =>
         render(start.index(breweries))
     }
     Database.runDb(v) 
@@ -35,10 +35,10 @@ case class Start(ds: DatastoreService) extends BaseController {
 }
 
 final class WorthDrinkingServlet extends ServletApplicationServlet[Stream, Stream] {
-  
   def userService = UserServiceFactory.getUserService
 
   val loggedIn = ☆(userService.currentUser >| (_:Request[Stream]))
+  
   val login = ((r: Request[Stream]) => redirectTo(userService.createLoginURL("/"))(r)).kleisli[Option]
   
   def redirectTo(l: String)(implicit r: Request[Stream]): Response[Stream] = Response.redirects(l)

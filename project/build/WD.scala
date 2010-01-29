@@ -10,6 +10,7 @@ class WDProject(info: ProjectInfo) extends DefaultWebProject(info) {
 
   val specs = "org.scala-tools.testing" %% "specs" % "1.6.2" % "test"
   
+  val inflectorRepo = "inflector-github" at "http://github.com/nkpart/scala-inflector/raw/master/repo"
   val inflector = "prohax" %% "inflector" % "1.0"
 
   // required because Ivy doesn't pull repositories from poms
