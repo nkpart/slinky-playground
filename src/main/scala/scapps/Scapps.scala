@@ -26,16 +26,7 @@ trait Validations {
 }
 
 object Scapps {
-  def addParam[IN[_]](request: Request[IN], key: String, value: String) = {
-    val kv = (key + "=" + value).toList // TODO escape key and value
-    val newUri = request.line.uri ++++ {
-      _ match {
-        case Some(qs) => Some(qs ++ ('&' :: kv))
-        case None => Some(kv)
-      }
-    }
-    request(request.line(newUri))
-  }
+  import RichRequest._
 
   def when[T](f: T => Boolean): Kleisli[Option, T, T] = ☆((t: T) => if (f(t)) some(t) else none)
 
@@ -43,8 +34,7 @@ object Scapps {
 
   def check[M[_], A, B, C](k: Kleisli[M, A, B], fail: Kleisli[M, A, C])(success: Kleisli[M, B, C])(implicit fr: FoldRight[M], b: Bind[M]): Kleisli[M, A, C] = ☆((a: A) => {
     val v = k(a)
-    if (v.empty) fail(a) else v >>= (success apply _)
-    //    k(a) some { x => success(x) } none { fail(a) }
+    if (v.empty) fail(a) else v >>= (x => success(x))
   })
 
   def reduce[T](rs: List[Kleisli[Option, Request[Stream], T]]): Kleisli[Option, Request[Stream], T] = {
@@ -78,7 +68,7 @@ object Scapps {
         }
         if (checks ∀ (_.isDefined)) {
           some(checks.foldl(request, (r: Request[Stream], check: Option[Option[(String, String)]]) => check match {
-            case Some(Some((k, v))) => addParam(r, k, v)
+            case Some(Some((k, v))) => r.addQueryParam(k, v)
             case Some(None) => r
             case None => r // should never reach here, all should be defined
           }))

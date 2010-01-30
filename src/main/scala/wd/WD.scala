@@ -24,25 +24,11 @@ package object wd extends RequestImplicits {
     def id(kt: Keyed[T]): String = kt.key.getId.shows
   }
 
-  implicit val beerKey = UnnamedClassEntityBase[wd.Beer]
-  implicit val breweryKey = UnnamedClassEntityBase[wd.Brewery]
+  implicit val beerModel: Model[Beer] = BeerModel
+  implicit val breweryModel: Model[Brewery] = BreweryModel
   
   implicit def breweryR = KeyedResource[Brewery]
   implicit def beerR = KeyedResource[Beer]
-  
-  implicit object breweryEntityThing extends EntityWriteable[wd.Brewery] {
-    def write(b: Brewery, e: Entity) {
-      e.setProperty("name", b.name)
-      e.setProperty("country", b.country.value)
-    }
-  }
-  
-  implicit object beerEntityThing extends EntityWriteable[wd.Beer] {
-    def write(b: Beer, e: Entity) {
-      e.setProperty("name", b.name)
-      e.setProperty("style", b.style.value)
-    }
-  }
   
   implicit val brewPost = new RequestCreate[Brewery] with RequestUpdate[Brewery] with scapps.Validations {
     val Required = "%s is required."
@@ -83,13 +69,5 @@ package object wd extends RequestImplicits {
       val vb = Option(e.getProperty(fields._2).asInstanceOf[B])
       (va <|*|> vb) map cons.tupled
     }
-  }
-
-
-  implicit val createBrewery: EntityCreatable[Brewery] = entityCreate2[Brewery, String, String](
-    (n,c) => { Brewery(n, Country(c)) },
-    ("name", "country")
-  )
-    
-  implicit val createBeer: EntityCreatable[Beer] = entityCreate2(Beer.apply _, ("name", "style"))
+  }  
 }

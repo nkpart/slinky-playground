@@ -10,8 +10,8 @@ import scalaz.http.servlet.HttpServlet._
 import scalaz.http.Slinky._
 import scalaz.http.response._
 import scalaz.http.response.Response._
-import com.google.appengine.api.users.{UserServiceFactory}
-import com.google.appengine.api.datastore.{DatastoreService}
+import com.google.appengine.api.users._
+import com.google.appengine.api.datastore._
 import scalaz.{Index => _}
 import scapps.Scapps._
 import rest._
@@ -19,20 +19,6 @@ import views._
 
 import scapps.RichRequest._
 import scapps._
-
-case class Start(ds: DatastoreService) extends BaseController {
-  def root(implicit request: Request[Stream]) = {
-    val v = Brewery.allByName ∘ { breweries =>
-        render(start.index(breweries))
-    }
-    Database.runDb(v) 
-  }
-  
-  def config(implicit request: Request[Stream]) = {
-    val styles = List(Style("a"))
-    render(start.config(styles))
-  }
-}
 
 final class WorthDrinkingServlet extends ServletApplicationServlet[Stream, Stream] {
   def userService = UserServiceFactory.getUserService
@@ -44,14 +30,14 @@ final class WorthDrinkingServlet extends ServletApplicationServlet[Stream, Strea
   def redirectTo(l: String)(implicit r: Request[Stream]): Response[Stream] = Response.redirects(l)
   
   val route: Request[Stream] => Option[Response[Stream]] = {
-    import Database._
+    import Services._
     
     check(loggedIn, login) {
       reduce(List(
-        at(Nil) >=> m(GET) map (r => runDb(ds => Start(ds).root(r))),
-        at("config") >=> m(GET) map (r => runDb(ds => Start(ds).config(r))),
-        "beers" / (r => v => runDb { ds => new BeersController(ds)(r).handle(v)}),
-        "breweries" / (r => v => runDb { ds => new BreweriesController(ds)(r).handle(v)})
+        at(Nil) >=> m(GET) map (r => Start.root),
+        at("config") >=> m(GET) map (r => Start.config),
+        "beers" / (r => v => BeersController.handle(v)),
+        "breweries" / (r => v => BreweriesController.handle(v))
       ))
     }
   }
@@ -61,8 +47,12 @@ final class WorthDrinkingServlet extends ServletApplicationServlet[Stream, Strea
   }
   
   def apply(implicit servlet: HttpServlet, servletRequest: HttpServletRequest, request: Request[Stream]) = {
-    request.log
-    route(request.methodHax()) | NotFound.xhtml
+    R.service(request, servletRequest.session) {
+      Services.service {
+        request.log
+        route(request.methodHax()) | NotFound.xhtml
+      }
+    }
   }
 }
 

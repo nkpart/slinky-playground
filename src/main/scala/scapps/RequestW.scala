@@ -3,6 +3,7 @@ package scapps
 import scalaz._
 import http.request._
 import http.request.Request._
+import http.response.Response
 import Scalaz._
 import rest._
 
@@ -16,12 +17,25 @@ trait RequestW[IN[_]] {
   def update[T](t: T)(implicit postable: RequestUpdate[T], fl: FoldLeft[IN]) = postable.update(request)(t)
   
   def log {
-    println("%s %s" format (request.method, request.path.list.mkString))
+    println("%s\t%s" format (request.method, request.path.list.mkString))
   }
+  
+  def redirectTo(place: String)(implicit e: Empty[IN]) = Response.redirects(place)(e,request)
   
   def methodHax(methodField: String = "_method")(implicit f: FoldLeft[IN]): Request[IN] = {
     val method = (apply(methodField) >>= (scalaz.http.Slinky.StringMethod _)) 
     method ∘ { (method :Method) => request(method) } | request
+  }
+  
+  def addQueryParam[IN[_]](key: String, value: String) = {
+    val kv = (key + "=" + value).toList // TODO escape key and value
+    val newUri = request.line.uri ++++ {
+      _ match {
+        case Some(qs) => Some(qs ++ ('&' :: kv))
+        case None => Some(kv)
+      }
+    }
+    request(request.line(newUri))
   }
 }
 

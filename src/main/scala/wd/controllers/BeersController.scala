@@ -13,7 +13,11 @@ import gae._
 import wd.Beer._
 import com.google.appengine.api.datastore.DatastoreService
 
-class BeersController(val ds: DatastoreService)(implicit val request: Request[Stream]) extends Controller with ControllerHelpers {
+object BeersController extends Controller with ControllerHelpers {
+  import scapps.R._
+  import Services._
+  
+  def ds = datastoreService
   
   def handle(v: Action[String]) = v match {
     case New => Some {
