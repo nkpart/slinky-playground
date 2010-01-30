@@ -8,7 +8,7 @@ import scalaz.http.request._
 import wd.{Brewery, Beer, Style, Country}
 import prohax.Inflector._
 
-package object wd extends RichRequests {
+package object wd extends RequestImplicits {
   type DB[T] = (DatastoreService => T)
   //TODO move to scapps
   type NamedError = (String, String)

@@ -1,19 +1,15 @@
 package scapps
 
-import Function._
-import scalaz.Scalaz._
-import scalaz.http.Slinky._
 import scalaz._
-import http._
+import Scalaz._
+import scalaz.http.Slinky._
+import scalaz.http._
 import scalaz.http.request._
 import scalaz.http.request.Request._
 import scalaz.http.response._
-import scalaz.http.servlet._
-import scalaz.http.servlet.HttpServlet.resource
 import xml.NodeSeq
 import gae._
-import RichNodeSeq._
-import rest.Resourced
+import rest._
 
 trait Controller {
   val layout: (NodeSeq => NodeSeq) // TODO strong type of layout. so the implicit is more explicit.

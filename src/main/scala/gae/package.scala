@@ -3,12 +3,13 @@ import gae._
 import scalaz._
 import Scalaz._
 
-package object gae extends 
+trait GAEBase extends 
   IdentityImplicits with
   DatastoreServiceImplicits with
   EntityImplicits with
-  UserServiceImplicits 
-  {
+  UserServiceImplicits
+  
+package object gae extends GAEBase {
 
   import com.google.appengine.api.datastore._
   def createQuery[T](implicit s: Kind[T]) = new Query(s.kind)

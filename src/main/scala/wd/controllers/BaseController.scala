@@ -10,7 +10,6 @@ import wd.views.layouts
 import com.google.appengine.api.users.UserServiceFactory
 
 trait ControllerHelpers { self: Controller =>
-  
   implicit val charset = UTF8
   
   val layout = layouts.main(UserServiceFactory.getUserService) _

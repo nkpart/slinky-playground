@@ -6,7 +6,7 @@ import http.request.Request._
 import Scalaz._
 import rest._
 
-trait RichRequest[IN[_]] {
+trait RequestW[IN[_]] {
   val request: Request[IN]
   
   def apply(s: String)(implicit f: FoldLeft[IN]): Option[String] = (request !| s) ∘ (_.mkString)
@@ -16,10 +16,10 @@ trait RichRequest[IN[_]] {
   def update[T](t: T)(implicit postable: RequestUpdate[T], fl: FoldLeft[IN]) = postable.update(request)(t)
 }
 
-trait RichRequests {
-  implicit def To[IN[_]](r: Request[IN]) = new RichRequest[IN] { val request = r }
+trait RequestImplicits {
+  implicit def To[IN[_]](r: Request[IN]) = new RequestW[IN] { val request = r }
   
-  implicit def From[IN[_]](r: RichRequest[IN]) = r.request
+  implicit def From[IN[_]](r: RequestW[IN]) = r.request
 }
 
-object RichRequest extends RichRequests
+object RichRequest extends RequestImplicits

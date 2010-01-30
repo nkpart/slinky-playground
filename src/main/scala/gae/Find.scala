@@ -18,3 +18,24 @@ object Find {
 
   def apply[T](implicit k: Kind[T]): Find[T] = Find(gae.createQuery[T], defaultOptions)
 }
+
+trait FindDSL {
+  val field: String
+  type QRY = Query => Query
+
+  import com.google.appengine.api.datastore.Query.SortDirection._
+  import com.google.appengine.api.datastore.Query.FilterOperator._
+
+  def asc: QRY = (_.addSort(field, ASCENDING))
+  def desc: QRY = (_.addSort(field, DESCENDING))
+  def ?==[T](t: T): QRY = (_.addFilter(field, EQUAL, t))
+
+  def ?!=[T](t: T): QRY = (_.addFilter(field, NOT_EQUAL, t))
+}
+
+trait FindDSLImplicits {
+  implicit def stringTo(s: String): FindDSL = new FindDSL { val field = s }
+  implicit def stringFrom(dsl: FindDSL): String = dsl.field
+}
+
+object dsl extends FindDSLImplicits
