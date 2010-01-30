@@ -26,10 +26,6 @@ trait Validations {
 }
 
 object Scapps {
-  def methodHax[IN[_]: FoldLeft]: (Request[IN] => Request[IN]) = ((r: Request[IN]) =>
-    ((r !| "_method") ∘ (_.mkString) >>= (scalaz.http.Slinky.StringMethod _)) ∘ { (method:Method) => r(method) } getOrElse r
-  )
-
   def addParam[IN[_]](request: Request[IN], key: String, value: String) = {
     val kv = (key + "=" + value).toList // TODO escape key and value
     val newUri = request.line.uri ++++ {

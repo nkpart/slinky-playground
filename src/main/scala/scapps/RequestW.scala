@@ -14,6 +14,15 @@ trait RequestW[IN[_]] {
   def create[T](implicit postable: RequestCreate[T], fl: FoldLeft[IN]) = postable.create(request)
 
   def update[T](t: T)(implicit postable: RequestUpdate[T], fl: FoldLeft[IN]) = postable.update(request)(t)
+  
+  def log {
+    println("%s %s" format (request.method, request.path.list.mkString))
+  }
+  
+  def methodHax(methodField: String = "_method")(implicit f: FoldLeft[IN]): Request[IN] = {
+    val method = (apply(methodField) >>= (scalaz.http.Slinky.StringMethod _)) 
+    method ∘ { (method :Method) => request(method) } | request
+  }
 }
 
 trait RequestImplicits {
