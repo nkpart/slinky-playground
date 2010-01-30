@@ -61,8 +61,8 @@ final class WorthDrinkingServlet extends ServletApplicationServlet[Stream, Strea
   }
   
   def apply(implicit servlet: HttpServlet, servletRequest: HttpServletRequest, request: Request[Stream]) = {
-    println(MethodParts.unapply(request))
-    route(Scapps.methodHax[Stream].apply(request)) getOrElse HttpServlet.resource(x => OK << x.toStream, NotFound.xhtml)
+    request.log
+    route(request.methodHax()) | NotFound.xhtml
   }
 }
 
