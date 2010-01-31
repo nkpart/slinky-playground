@@ -12,30 +12,18 @@ import scalaz.http.response._
 import scalaz.http.response.Response._
 import com.google.appengine.api.users._
 import com.google.appengine.api.datastore._
-import scalaz.{Index => _}
-import scapps.Scapps._
+import scalaz._
 import rest._
 import views._
 
 import scapps.RichRequest._
 import scapps._
+import Scapps._
 
-abstract class BaseServlet extends ServletApplicationServlet[Stream,Stream] {
-  def apply(implicit servlet: HttpServlet, servletRequest: HttpServletRequest, request: Request[Stream]) = {
-    R.service(request, servletRequest.session) {
-      Services.service {
-        request.log
-        route(request.methodHax()) | NotFound.xhtml
-      }
-    }
-  }
+final class WorthDrinkingServlet extends BaseServlet {
+  import scapps.R._
+  def _404_ = NotFound.xhtml
   
-  def route: Request[Stream] => Option[Response[Stream]]
-  
-  def _404_ : Response[Stream]
-}
-
-final class WorthDrinkingServlet extends ServletApplicationServlet[Stream, Stream] {
   val route: Request[Stream] => Option[Response[Stream]] = {
     import Services._
     
@@ -48,18 +36,11 @@ final class WorthDrinkingServlet extends ServletApplicationServlet[Stream, Strea
       ))
     }
   }
+  
+  def arounds = List(Services.service _)
 
   override def init() = {
     prohax.Bootstrap.defineInflections_!
-  }
-  
-  def apply(implicit servlet: HttpServlet, servletRequest: HttpServletRequest, request: Request[Stream]) = {
-    R.service(request, servletRequest.session) {
-      Services.service {
-        request.log
-        route(request.methodHax()) | NotFound.xhtml
-      }
-    }
   }
 }
 

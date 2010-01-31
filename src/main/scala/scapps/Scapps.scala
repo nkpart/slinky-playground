@@ -26,6 +26,17 @@ trait Validations {
 }
 
 object Scapps {
+  type Around[T] = (=> T) => T
+  
+  implicit def AroundMonoid[T] = new scalaz.Semigroup[Around[T]] {
+    def append(s1: Around[T], s2: => Around[T]): Around[T] = t => s1(s2(t))
+  }
+  
+  implicit def AroundZero[T] = new scalaz.Zero[Around[T]] {
+    def help(t: => T): T = t
+    val zero = help _
+  }
+  
   import RichRequest._
 
   def when[T](f: T => Boolean): Kleisli[Option, T, T] = ☆((t: T) => if (f(t)) some(t) else none)
