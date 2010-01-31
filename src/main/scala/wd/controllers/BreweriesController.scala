@@ -15,20 +15,14 @@ import com.google.appengine.api.datastore._
 import wd.views.breweries
 import wd.Brewery._
 
-object BreweriesController extends Controller with ControllerHelpers {
+object Breweries extends RestController[Keyed[Brewery]] {
   import scapps.R._
   import Services._
   
   def ds = datastoreService
   
-  def find(key: Long): Option[Keyed[Brewery]] = ds.findById[Brewery](key)
-  
-  def lookup(v: Action[String]): Option[Action[Keyed[Brewery]]] = (v map ((_:String).toLong)) ↦ (find _)
-  
-  def handle(v: Action[String]): Option[Response[Stream]] = lookup(v) >>= (handleB _)
-  
-  def handleB(v: Action[Keyed[Brewery]]): Option[Response[Stream]] = v match {
-    case New => render(breweries.nu()) η
+  def apply(v: Action[Keyed[Brewery]]): Option[Response[Stream]] = v match {
+    case New => render(breweries.nu(request.formBase(Nil))) η
 
     case rest.Show(brewery) => {
       val beers = brewery.children[Beer](ds)
@@ -42,7 +36,7 @@ object BreweriesController extends Controller with ControllerHelpers {
       val saved = readB ∘ (_.insert(ds))
       
       saved fold ({errors => 
-        render(breweries.nu(errors.list))
+        render(breweries.nu(request.formBase(errors.list)))
       }, _ => request.redirectTo("/"))
     } η
 

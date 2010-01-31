@@ -26,7 +26,7 @@ trait RequestW[IN[_]] {
   
   def methodHax(methodField: String = "_method")(implicit f: FoldLeft[IN]): Request[IN] = {
     val method = (apply(methodField) >>= (scalaz.http.Slinky.StringMethod _)) 
-    method ∘ { (method :Method) => request(method) } | request
+    method ∘ { (method: Method) => request(method) } | request
   }
   
   def addQueryParam[IN[_]](key: String, value: String) = {
@@ -38,6 +38,11 @@ trait RequestW[IN[_]] {
       }
     }
     request(request.line(newUri))
+  }
+  
+  def formBase(e: List[(String, String)])(implicit fl: FoldLeft[IN]) = new FormBase {
+    val errors = e
+    val previous = ((key: String) => (request | key) map (_.mkString))
   }
 }
 

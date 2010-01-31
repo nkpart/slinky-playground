@@ -7,7 +7,8 @@ import gae._
 import rest._
 import scalaz._
 import Scalaz._
-import scalaz.http.request.PUT
+import scalaz.http.request._
+import scapps._
 
 trait RestHelpers {
   def createForm[T](xml: NodeSeq)(implicit resourced: Resourced[T]): NodeSeq = {
@@ -133,22 +134,31 @@ object breweries extends RestHelpers {
     </small></div>
   }
 
-  def nu(errors: List[(String, String)] = Nil): NodeSeq = {
+  def newBrewery(errors: List[(String,String)]) = {
+    val base = scapps.R.request.formBase(errors)
+    base.form("/breweries", POST) {
+      <p>{
+        base.text("name", value = Some("hi ther"))
+      }</p>
+    }
+  }
+  
+  def nu(base: FormBase): NodeSeq = {
     <h2>New Brewery</h2>
             <div>
-              { ~((!errors.isEmpty).option(errors) map { errors => {
+              { ~((!base.errors.isEmpty).option(base.errors) map { errors => {
                 <div id="errors">
                   <dl>
                     { errors map { case (k, v) => <dt>{k}</dt><dd>{v}</dd> } }
                   </dl>
                 </div>
               }}) }
-              {createForm[Keyed[Brewery]] {
+              {base.form("/breweries", POST) {
                 <dl>
                   <dt><label for="name">Name:</label></dt>
-                  <dd><input type="text" name="name"/></dd>
+                  <dd>{base.text("name")}</dd>
                   <dt><label for="name">Country:</label></dt>
-                  <dd><input type="text" name="country"/></dd>
+                  <dd>{base.text("country")}</dd>
                 </dl>
                 <a href="/">Cancel</a> <input type="submit"/>
               }}

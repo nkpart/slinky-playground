@@ -19,4 +19,12 @@ package object slinky {
     implicit val re = r
     Response.redirects[Stream, Stream](userService.createLoginURL(returnTo))
   }).kleisli[Option]
+  
+  def adminOnly(f: Request[Stream] => Response[Stream], denied: => Response[Stream]): Request[Stream] => Response[Stream] = r => {
+    userService.isUserAdmin ? f(r) | denied
+  }
+  
+  def authorised[T](t: => T): Option[T] = {
+    userService.isUserAdmin ? some(t) | none
+  }
 }

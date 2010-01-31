@@ -9,6 +9,7 @@ import wd.{Brewery, Beer, Style, Country}
 import prohax.Inflector._
 
 package object wd extends RequestImplicits {
+  implicit val charset = UTF8
   //TODO move to scapps
   type NamedError = (String, String)
   type Posted[T] = Validation[NonEmptyList[NamedError], T]
@@ -34,13 +35,13 @@ package object wd extends RequestImplicits {
 
     def create[IN[_] : FoldLeft](r: Request[IN]) = {
       val name = required(r)("name")(Required)
-      val country = required(r)("country")(Required)
+      val country = nonEmpty(r)("country")(Required)
       (name <|*|> country) ∘ { case (n,c) => Brewery(n, Country(c)) }
     }
 
     def update[IN[_]: FoldLeft](r: Request[IN])(brewery: Brewery) = {
       val name = required(r)("name")(Required)
-      val country = required(r)("country")(Required)
+      val country = nonEmpty(r)("country")(Required)
       (name <|*|> country) ∘ { case (n,c) => brewery copy (name = n, country = Country(c)) } fold (errs => (errs.list, brewery), (Nil, _))
     }
   }

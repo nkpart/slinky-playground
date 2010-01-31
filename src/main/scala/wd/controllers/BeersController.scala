@@ -13,22 +13,22 @@ import gae._
 import wd.Beer._
 import com.google.appengine.api.datastore.DatastoreService
 
-object BeersController extends Controller with ControllerHelpers {
+object BeersController extends RestController[String] {
   import scapps.R._
   import Services._
   
   def ds = datastoreService
   
-  def handle(v: Action[String]) = v match {
-    case New => Some {
+  def apply(v: Action[String]) = v match {
+    case New => {
       val breweryId = request("brewery_id") map (_.toLong)
-      breweryId ∘ { id =>
-        ~(ds.findById[Brewery](id) ∘ { brewery =>
+      breweryId some { id =>
+        ds.findById[Brewery](id) ∘ { brewery =>
           render(beers.nu(Left(brewery)))
-        })
-      } getOrElse {
+        }
+      } none {
         val all: Iterable[Keyed[Brewery]] = Brewery.allByName(ds)
-        render(beers.nu(Right(all)))
+        Some(render(beers.nu(Right(all))))
       }
     }
 
