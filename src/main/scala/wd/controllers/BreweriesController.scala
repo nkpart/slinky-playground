@@ -43,14 +43,14 @@ object BreweriesController extends Controller with ControllerHelpers {
       
       saved fold ({errors => 
         render(breweries.nu(errors.list))
-      }, _ => redirectTo("/"))
+      }, _ => request.redirectTo("/"))
     } η
 
     case Update(brewery) => {
         val (errors, updated) = request.update(brewery.value)
         val newKeyed = Keyed(updated, brewery.key)
         errors match {
-          case Nil => redirectTo(newKeyed.save(ds))
+          case Nil => request.redirectTo(newKeyed.save(ds))
           case (_ :: _) => render(breweries.edit(newKeyed, errors))
         }
     } η

@@ -38,7 +38,7 @@ object BeersController extends Controller with ControllerHelpers {
       val br = ds.findById[Brewery](breweryKey).toSuccess(("brewery" -> "Unknown brewery").wrapNel)
       val persisted = (readB <|*|> br) map { case (beer, brk) => {
         val inserted = beer.insertWithParent(brk.key, ds)
-        redirectTo(brk.rr.show)
+        request.redirectTo(brk)
       }}
 
       persisted fold ({errors => 

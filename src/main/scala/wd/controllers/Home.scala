@@ -20,19 +20,26 @@ import views._
 import scapps.RichRequest._
 import scapps._
 
-final class WorthDrinkingServlet extends ServletApplicationServlet[Stream, Stream] {
-  def userService = UserServiceFactory.getUserService
+abstract class BaseServlet extends ServletApplicationServlet[Stream,Stream] {
+  def apply(implicit servlet: HttpServlet, servletRequest: HttpServletRequest, request: Request[Stream]) = {
+    R.service(request, servletRequest.session) {
+      Services.service {
+        request.log
+        route(request.methodHax()) | NotFound.xhtml
+      }
+    }
+  }
+  
+  def route: Request[Stream] => Option[Response[Stream]]
+  
+  def _404_ : Response[Stream]
+}
 
-  val loggedIn = ☆(userService.currentUser >| (_:Request[Stream]))
-  
-  val login = ((r: Request[Stream]) => redirectTo(userService.createLoginURL("/"))(r)).kleisli[Option]
-  
-  def redirectTo(l: String)(implicit r: Request[Stream]): Response[Stream] = Response.redirects(l)
-  
+final class WorthDrinkingServlet extends ServletApplicationServlet[Stream, Stream] {
   val route: Request[Stream] => Option[Response[Stream]] = {
     import Services._
     
-    check(loggedIn, login) {
+    check(slinky.isLoggedIn, slinky.doLogin()) {
       reduce(List(
         at(Nil) >=> m(GET) map (r => Start.root),
         at("config") >=> m(GET) map (r => Start.config),

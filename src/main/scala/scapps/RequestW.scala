@@ -22,6 +22,8 @@ trait RequestW[IN[_]] {
   
   def redirectTo(place: String)(implicit e: Empty[IN]) = Response.redirects(place)(e,request)
   
+  def redirectTo[T](t: T)(implicit e: Empty[IN], resourced: Resourced[T]): Response[IN] = Response.redirects(resourced.show(t))(e, request)
+  
   def methodHax(methodField: String = "_method")(implicit f: FoldLeft[IN]): Request[IN] = {
     val method = (apply(methodField) >>= (scalaz.http.Slinky.StringMethod _)) 
     method ∘ { (method :Method) => request(method) } | request
