@@ -2,23 +2,14 @@ package wd
 package controllers
 
 import gae._
-import scalaz.Scalaz._
-import scalaz.http.request._
-import scalaz.http.request.Request._
-import scalaz.http.servlet._
-import scalaz.http.servlet.HttpServlet._
-import scalaz.http.Slinky._
-import scalaz.http.response._
-import scalaz.http.response.Response._
-import com.google.appengine.api.users._
-import com.google.appengine.api.datastore._
-import scalaz._
 import rest._
-import views._
-
-import scapps.RichRequest._
 import scapps._
 import Scapps._
+import scalaz._
+import Scalaz._
+import http.request._
+import http.response._
+import scalaz.http.Slinky._
 
 final class WorthDrinkingServlet extends BaseServlet {
   import scapps.R._
@@ -39,8 +30,7 @@ final class WorthDrinkingServlet extends BaseServlet {
   
   def arounds = List(Services.service _)
 
-  override def init() = {
-    prohax.Bootstrap.defineInflections_!
-  }
+  override def init = prohax.Bootstrap.defineInflections_!
+
 }
 
