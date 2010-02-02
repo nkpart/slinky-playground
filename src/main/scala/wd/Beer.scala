@@ -20,3 +20,9 @@ object BeerModel extends Model[Beer] {
     }
   }
 }
+
+// Todo: newtype
+object Beers extends wd.experimental.Base[(String, Style)]("beer") {
+  import wd.experimental._
+  def * = "name".prop[String] ~ "style".typedProp(Style)
+}
