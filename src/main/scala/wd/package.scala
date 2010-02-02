@@ -9,6 +9,9 @@ import wd.{Brewery, Beer, Style, Country}
 import prohax.Inflector._
 
 package object wd extends RequestImplicits {
+  type Request[IN[_]] = scalaz.http.request.Request[IN]
+  type Response[IN[_]] = scalaz.http.request.Request[IN]
+  
   implicit val charset = UTF8
   //TODO move to scapps
   type NamedError = (String, String)
@@ -30,21 +33,7 @@ package object wd extends RequestImplicits {
   implicit def breweryR = KeyedResource[Brewery]
   implicit def beerR = KeyedResource[Beer]
   
-  implicit val brewPost = new RequestCreate[Brewery] with RequestUpdate[Brewery] with scapps.Validations {
-    val Required = "%s is required."
-
-    def create[IN[_] : FoldLeft](r: Request[IN]) = {
-      val name = required(r)("name")(Required)
-      val country = nonEmpty(r)("country")(Required)
-      (name <|*|> country) ∘ { case (n,c) => Brewery(n, Country(c)) }
-    }
-
-    def update[IN[_]: FoldLeft](r: Request[IN])(brewery: Brewery) = {
-      val name = required(r)("name")(Required)
-      val country = nonEmpty(r)("country")(Required)
-      (name <|*|> country) ∘ { case (n,c) => brewery copy (name = n, country = Country(c)) } fold (errs => (errs.list, brewery), (Nil, _))
-    }
-  }
+  implicit val breweryPost = BreweryPost
 
   implicit val beerPost = new RequestCreate[Beer] with RequestUpdate[Beer] with scapps.Validations {
     val Required = "%s is required."

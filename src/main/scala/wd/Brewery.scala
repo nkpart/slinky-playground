@@ -4,6 +4,7 @@ import gae._
 import gae.dsl._
 import scalaz._
 import Scalaz._
+import scapps._
 import com.google.appengine.api.datastore._
 
 // TODO
@@ -33,5 +34,21 @@ object BreweryModel extends Model[Brewery] {
       e.setProperty("name", b.name)
       e.setProperty("country", b.country.value)
     }
+  }
+}
+
+object BreweryPost extends RequestCreate[Brewery] with RequestUpdate[Brewery] with scapps.Validations {
+  val Required = "%s is required."
+
+  def create[IN[_] : FoldLeft](r: Request[IN]) = {
+    val name = required(r)("name")(Required)
+    val country = nonEmpty(r)("country")(Required)
+    (name <|*|> country) ∘ { case (n,c) => Brewery(n, Country(c)) }
+  }
+
+  def update[IN[_]: FoldLeft](r: Request[IN])(brewery: Brewery) = {
+    val name = required(r)("name")(Required)
+    val country = nonEmpty(r)("country")(Required)
+    (name <|*|> country) ∘ { case (n,c) => brewery copy (name = n, country = Country(c)) } fold (errs => (errs.list, brewery), (Nil, _))
   }
 }

@@ -13,6 +13,5 @@ trait Validations {
     r(fldName).toSuccess(fail(fldName, fmt).wrapNel)
     
   def nonEmpty[IN[_]: FoldLeft](r: Request[IN])(fldName: String)(fmt: String): Validation[NonEmptyList[(String,String)], String] =
-    required(r)(fldName)(fmt) >>= (((s: String) => !s.isEmpty).toValidation(fail(fldName, fmt)))
-    
+    required(r)(fldName)(fmt) >>= (((s: String) => !s.isEmpty).toValidation(fail(fldName, fmt)))   
 }
