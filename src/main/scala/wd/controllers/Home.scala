@@ -20,7 +20,7 @@ final class WorthDrinkingServlet extends BaseServlet with BaseController {
   def _503_ = render(Forbidden, <p>503</p>)
   
   implicit def richAction(v: Action[String]) = new {
-    def lookup[T](implicit ds: DatastoreService, m: Model[T]) = v ↦ (key => ds.findById[T](key.toLong))
+    def lookup[T](base: sage.EntityBase[T])(implicit ds: DatastoreService) = v ↦ (key => base.lookup(key.toLong)(ds))
   }
   
   val route: Request[Stream] => Option[Response[Stream]] = {
@@ -30,7 +30,7 @@ final class WorthDrinkingServlet extends BaseServlet with BaseController {
         at("config") >=> m(GET) map slinky.adminOnly(_ => Start.config, _503_),
         "beers" / (r => v => BeersController(v)),
         "breweries" / (r => v => {
-          v.lookup[Brewery] >>= Breweries.apply _
+          v.lookup(Breweries) >>= BreweriesController.apply _
         })
       ))
     }

@@ -9,6 +9,7 @@ import scalaz._
 import Scalaz._
 import scalaz.http.request._
 import scapps._
+import sage._
 
 trait RestHelpers {
   def createForm[T](xml: NodeSeq)(implicit resourced: Resourced[T]): NodeSeq = {

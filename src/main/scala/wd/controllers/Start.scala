@@ -12,11 +12,9 @@ import wd.views._
 object Start extends BaseController {
   import scapps.R._
   import gae.Services._
-  
-  def ds = datastoreService
-  
+    
   def root = {
-    val breweries =  Brewery.allByName(ds)
+    val breweries =  Breweries.allByName
     render(start.index(breweries))
   }
   

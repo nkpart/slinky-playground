@@ -13,9 +13,9 @@ import scalaz.http.response.Response
 import scalaz.http.request.Request
 import com.google.appengine.api.datastore._
 import wd.views.breweries
-import wd.Brewery._
+import sage._
 
-object Breweries extends RestController[Keyed[Brewery]] {
+object BreweriesController extends RestController[Keyed[Brewery]] {
   import scapps.R._
   import Services._
   
@@ -25,15 +25,16 @@ object Breweries extends RestController[Keyed[Brewery]] {
     case New => render(breweries.nu(request.formBase(Nil))) η
 
     case rest.Show(brewery) => {
-      val beers = brewery.children[Beer](ds)
+      val beers = Beers.childrenOf(brewery.key)
       render(breweries.show(brewery, beers))
     } η
 
     case Edit(brewery) => { render(breweries.edit(brewery, Nil)) } η
 
     case Create => {
+      
       val readB = request.create[Brewery]
-      val saved = readB ∘ (_.insert(ds))
+      val saved = readB ∘ (Breweries << _)
       
       saved fold ({errors => 
         render(breweries.nu(request.formBase(errors.list)))
@@ -42,9 +43,9 @@ object Breweries extends RestController[Keyed[Brewery]] {
 
     case Update(brewery) => {
         val (errors, updated) = request.update(brewery.value)
-        val newKeyed = Keyed(updated, brewery.key)
+        val newKeyed = Keyed(brewery.key, updated)
         errors match {
-          case Nil => request.redirectTo(newKeyed.save(ds))
+          case Nil => request.redirectTo(Breweries << newKeyed)
           case (_ :: _) => render(breweries.edit(newKeyed, errors))
         }
     } η

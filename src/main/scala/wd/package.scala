@@ -7,6 +7,7 @@ import scapps._
 import scalaz.http.request._
 import wd.{Brewery, Beer, Style, Country}
 import prohax.Inflector._
+import sage._
 
 package object wd extends RequestImplicits {
   type Request[IN[_]] = scalaz.http.request.Request[IN]
@@ -16,20 +17,12 @@ package object wd extends RequestImplicits {
   //TODO move to scapps
   type NamedError = (String, String)
   type Posted[T] = Validation[NonEmptyList[NamedError], T]
-
-  def UnnamedClassEntityBase[T](implicit m: ClassManifest[T]) = new EntityBase[T] {
-    def kind = m.erasure.getSimpleName
-    def keyName(t: T) = None
-  }
   
   def KeyedResource[T](implicit m: ClassManifest[T]) = new Resourced[Keyed[T]] {
     val resource: Resource = Resource(m.erasure.getSimpleName.toLowerCase.pluralize)
     def id(kt: Keyed[T]): String = kt.key.getId.shows
   }
 
-  implicit val beerModel: Model[Beer] = BeerModel
-  implicit val breweryModel: Model[Brewery] = BreweryModel
-  
   implicit def breweryR = KeyedResource[Brewery]
   implicit def beerR = KeyedResource[Beer]
   
@@ -51,12 +44,4 @@ package object wd extends RequestImplicits {
       (name <|*|> style) map { case (n,s) => beer copy (name = n, style = Style(s))} fold (err => (err.list, beer), br => (Nil, br))
     }
   } 
-
-  def entityCreate2[T, A, B](cons: (A, B) => T, fields: (String, String)): EntityCreatable[T] = new EntityCreatable[T] {
-    def createFrom(e: Entity): Option[T] = {
-      val va = Option(e.getProperty(fields._1).asInstanceOf[A])
-      val vb = Option(e.getProperty(fields._2).asInstanceOf[B])
-      (va <|*|> vb) map cons.tupled
-    }
-  }  
 }

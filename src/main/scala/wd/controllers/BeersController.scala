@@ -1,6 +1,7 @@
 package wd
 package controllers
 
+import sage._
 import scalaz._
 import http.response.Response
 import Scalaz._
@@ -10,7 +11,6 @@ import wd._
 import scapps._
 import rest._
 import gae._
-import wd.Beer._
 import com.google.appengine.api.datastore.DatastoreService
 
 object BeersController extends RestController[String] {
@@ -23,11 +23,11 @@ object BeersController extends RestController[String] {
     case New => {
       val breweryId = request("brewery_id") map (_.toLong)
       breweryId some { id =>
-        ds.findById[Brewery](id) ∘ { brewery =>
+        Breweries.lookup(id) ∘ { brewery =>
           render(beers.nu(Left(brewery)))
         }
       } none {
-        val all: Iterable[Keyed[Brewery]] = Brewery.allByName(ds)
+        val all: Iterable[Keyed[Brewery]] = Breweries.allByName
         Some(render(beers.nu(Right(all))))
       }
     }
@@ -35,14 +35,14 @@ object BeersController extends RestController[String] {
     case Create => Some {
       val readB = request.create[Beer]
       val breweryKey = request("brewery_id") map (_.toLong) get
-      val br = ds.findById[Brewery](breweryKey).toSuccess(("brewery" -> "Unknown brewery").wrapNel)
+      val br = Breweries.lookup(breweryKey).toSuccess(("brewery" -> "Unknown brewery").wrapNel)
       val persisted = (readB <|*|> br) map { case (beer, brk) => {
-        val inserted = beer.insertWithParent(brk.key, ds)
+        val inserted = Beers.parentedSave(beer, parent = brk.key)
         request.redirectTo(brk)
       }}
 
       persisted fold ({errors => 
-        val all: Iterable[Keyed[Brewery]] = Brewery.allByName(ds)
+        val all: Iterable[Keyed[Brewery]] = Breweries.allByName
         render(beers.nu(Right(all)))
       }, identity)
     }
