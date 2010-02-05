@@ -9,7 +9,7 @@ import scalaz.http.request._
 
 import wd.views._
 
-object Start extends BaseController {
+object Start extends WDLayout {
   import scapps.R._
   import gae.Services._
     

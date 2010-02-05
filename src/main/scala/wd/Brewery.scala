@@ -16,8 +16,9 @@ case class Country(value: String) extends NewType[String]
 case class Brewery(name: String, country: Country)
 
 object Breweries extends Base[Brewery]("breweries") {
-  import sage.dsl._
   def * = "name".prop[String] ~ "country".typedProp(Country) <> (Brewery, Brewery.unapply _)
+
+  import sage.dsl._
   
   def allByName(implicit ds: DatastoreService) = this.find.query("name".asc).iterable
   

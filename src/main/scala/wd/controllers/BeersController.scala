@@ -21,14 +21,15 @@ object BeersController extends RestController[String] {
   
   def apply(v: Action[String]) = v match {
     case New => {
+      // TODO Add contexts matching in.
       val breweryId = request("brewery_id") map (_.toLong)
       breweryId some { id =>
         Breweries.lookup(id) ∘ { brewery =>
           render(beers.nu(Left(brewery)))
         }
       } none {
-        val all: Iterable[Keyed[Brewery]] = Breweries.allByName
-        Some(render(beers.nu(Right(all))))
+        val breweries = Breweries.allByName    
+        Some(render(beers.nu(Right(breweries))))
       }
     }
 
@@ -41,8 +42,8 @@ object BeersController extends RestController[String] {
         request.redirectTo(brk)
       }}
 
-      persisted fold ({errors => 
-        val all: Iterable[Keyed[Brewery]] = Breweries.allByName
+      persisted fold ({errors =>
+        val all = Breweries.allByName
         render(beers.nu(Right(all)))
       }, identity)
     }

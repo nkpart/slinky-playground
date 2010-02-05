@@ -2,15 +2,15 @@
   <library name="Libs">
     <CLASSES>
       <root url="file://$PROJECT_DIR$/lib" />
-      <root url="file://$PROJECT_DIR$/project/boot/scala-2.8.0.Beta1-RC8/lib" />
-      <root url="file://$PROJECT_DIR$/lib_managed/scala_2.8.0.Beta1-RC8/compile" />
+      <root url="file://$PROJECT_DIR$/lib_managed/scala_2.8.0.Beta1/compile" />
+      <root url="file://$PROJECT_DIR$/lib_managed/scala_2.8.0.Beta1/test" />
     </CLASSES>
     <JAVADOC>
       <root url="file://$PROJECT_DIR$/appengine/docs/javadoc" />
     </JAVADOC>
     <SOURCES />
     <jarDirectory url="file://$PROJECT_DIR$/lib" recursive="false" />
-    <jarDirectory url="file://$PROJECT_DIR$/lib_managed/scala_2.8.0.Beta1-RC8/compile" recursive="false" />
-    <jarDirectory url="file://$PROJECT_DIR$/project/boot/scala-2.8.0.Beta1-RC8/lib" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/lib_managed/scala_2.8.0.Beta1/compile" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/lib_managed/scala_2.8.0.Beta1/test" recursive="false" />
   </library>
 </component>

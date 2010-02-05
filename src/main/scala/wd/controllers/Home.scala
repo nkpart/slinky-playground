@@ -13,11 +13,11 @@ import scalaz.http.Slinky._
 
 import com.google.appengine.api.datastore._
 
-final class WorthDrinkingServlet extends BaseServlet with BaseController {
+final class WorthDrinkingServlet extends BaseServlet with WDLayout {
   import scapps.R._
   import Services._
-  def _404_ = render(NotFound, <p>404</p>)
-  def _503_ = render(Forbidden, <p>503</p>)
+  def _404_ = render(<p>404</p>, status = NotFound)
+  def _503_ = render(<p>503</p>, status = Forbidden)
   
   implicit def richAction(v: Action[String]) = new {
     def lookup[T](base: sage.EntityBase[T])(implicit ds: DatastoreService) = v ↦ (key => base.lookup(key.toLong)(ds))
