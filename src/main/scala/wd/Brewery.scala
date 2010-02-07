@@ -5,6 +5,7 @@ import sage._
 import scalaz._
 import Scalaz._
 import scapps._
+import belt._
 import com.google.appengine.api.datastore._
 
 // TODO
@@ -29,13 +30,13 @@ object Breweries extends Base[Brewery]("breweries") {
 object BreweryPost extends RequestCreate[Brewery] with RequestUpdate[Brewery] with scapps.Validations {
   val Required = "%s is required."
 
-  def create[IN[_] : FoldLeft](r: Request[IN]) = {
+  def create(r: Request) = {
     val name = required(r)("name")(Required)
     val country = nonEmpty(r)("country")(Required)
     (name <|*|> country) ∘ { case (n,c) => Brewery(n, Country(c)) }
   }
 
-  def update[IN[_]: FoldLeft](r: Request[IN])(brewery: Brewery) = {
+  def update(r: Request)(brewery: Brewery) = {
     val name = required(r)("name")(Required)
     val country = nonEmpty(r)("country")(Required)
     (name <|*|> country) ∘ { case (n,c) => brewery copy (name = n, country = Country(c)) } fold (errs => (errs.list, brewery), (Nil, _))

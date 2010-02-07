@@ -1,21 +1,23 @@
 import rest.Resourced
 import scalaz._
-import http.request._
-import http.response._
+import belt._
 import http.request.Request._
+import http.request.{Request => _, GET, PUT, POST, DELETE}
 import Scalaz._
 
 package object rest {
   
-  def resource(base: String, f: (Request[Stream] => Action[String] => Option[Response[Stream]])) = ☆((r: Request[Stream]) => {
+  def resource(base: String, f: (Request => Action[String] => Option[Response])) = ☆((r: Request) => {
     r.action match {
       case Some((b, action)) if b == base => f(r)(action)
       case _   => none
     }
   })
+
+  def redirect[T](t: T)(implicit resourced: Resourced[T]): belt.Response = belt.redirect(resourced.show(t))
   
   implicit def mountR(base: String) = new {
-    def /(f: (Request[Stream] => Action[String] => Option[Response[Stream]])) = resource(base, f)
+    def /(f: (Request => Action[String] => Option[Response])) = resource(base, f)
   }
   
   implicit def showMe[T](t: T)(implicit r: Resourced[T]) = new {
@@ -25,6 +27,7 @@ package object rest {
       def edit = r.edit(t)
     }
   }
+
   
   implicit val actionTraverse = new Traverse[rest.Action] {
     def traverse[F[_]: Applicative, A, B](f: A => F[B], t: Action[A]): F[Action[B]] = t match {
@@ -38,9 +41,9 @@ package object rest {
     }
   }
   
-  implicit def requestAction[IN[_]](request: Request[IN]) = new {
+  implicit def requestAction[IN[_]](request: Request) = new {
     lazy val action: Option[(String, Action[String])] = {
-      request match {
+      request.underlying match {
         case MethodParts(GET, List(base)) => Some((base, rest.Index))
         case MethodParts(GET, List(base, "new")) => Some((base, New))
         case MethodParts(GET, List(base, id)) => Some((base, rest.Show(id)))

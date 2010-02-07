@@ -1,18 +1,15 @@
-import com.google.appengine.api.datastore.{Key, DatastoreService, KeyFactory, Entity}
+import com.google.appengine.api.datastore._
 import gae._
 import rest._
 import scalaz._
 import Scalaz._
 import scapps._
-import scalaz.http.request._
+import belt._
 import wd.{Brewery, Beer, Style, Country}
 import prohax.Inflector._
 import sage._
 
 package object wd extends RequestImplicits {
-  type Request[IN[_]] = scalaz.http.request.Request[IN]
-  type Response[IN[_]] = scalaz.http.request.Request[IN]
-  
   implicit val charset = UTF8
   //TODO move to scapps
   type NamedError = (String, String)
@@ -31,13 +28,13 @@ package object wd extends RequestImplicits {
   implicit val beerPost = new RequestCreate[Beer] with RequestUpdate[Beer] with scapps.Validations {
     val Required = "%s is required."
     
-    def create[IN[_] : FoldLeft](r: Request[IN]) = {
+    def create(r: Request) = {
       val name = required(r)("name")(Required)
       val style = required(r)("style")(Required)
       (name <|*|> style) map { case (n,s) => Beer(n, Style(s))}
     }
 
-    def update[IN[_] : FoldLeft](r: Request[IN])(beer: Beer) = {
+    def update(r: Request)(beer: Beer) = {
       val name = required(r)("name")(Required)
       val style = required(r)("style")(Required)
       

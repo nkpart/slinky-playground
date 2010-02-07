@@ -39,7 +39,7 @@ object BeersController extends RestController[String] {
       val br = Breweries.lookup(breweryKey).toSuccess(("brewery" -> "Unknown brewery").wrapNel)
       val persisted = (readB <|*|> br) map { case (beer, brk) => {
         val inserted = Beers.parentedSave(beer, parent = brk.key)
-        request.redirectTo(brk)
+        rest.redirect(brk)
       }}
 
       persisted fold ({errors =>

@@ -2,25 +2,23 @@ package gae
 
 import scalaz._
 import Scalaz._
-import http.request.Request
-import http.response._
+import belt._
 
 // Useful functions for writing slinky apps on GAE
 package object slinky {
-  type Filter = Kleisli[Option, Request[Stream], Request[Stream]]
+  type Filter = Kleisli[Option, Request, Request]
   
   import Services._
   
-  val isLoggedIn: Filter = ☆(userService.isUserLoggedIn.option(_:Request[Stream]))
+  val isLoggedIn: Filter = ☆(userService.isUserLoggedIn.option(_:Request))
   
-  val isAdmin: Filter =  ☆((r:Request[Stream]) => userService.isUserAdmin.option(r) )
+  val isAdmin: Filter =  ☆((r:Request) => userService.isUserAdmin.option(r) )
   
-  def doLogin(returnTo: String = "/") = ((r: Request[Stream]) => {   
-    implicit val re = r
-    Response.redirects[Stream, Stream](userService.createLoginURL(returnTo))
+  def doLogin(returnTo: String = "/") = ((r: Request) => {
+    belt.redirect(userService.createLoginURL(returnTo))
   }).kleisli[Option]
   
-  def adminOnly(f: Request[Stream] => Response[Stream], denied: => Response[Stream]): Request[Stream] => Response[Stream] = r => {
+  def adminOnly(f: Request => Response, denied: => Response): Request => Response = r => {
     userService.isUserAdmin ? f(r) | denied
   }
   

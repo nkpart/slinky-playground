@@ -8,9 +8,7 @@ import wd._
 import scapps._
 import gae._
 import rest._
-
-import scalaz.http.response.Response
-import scalaz.http.request.Request
+import belt._
 import com.google.appengine.api.datastore._
 import wd.views.breweries
 import sage._
@@ -21,7 +19,7 @@ object BreweriesController extends RestController[Keyed[Brewery]] {
   
   def ds = datastoreService
   
-  def apply(v: Action[Keyed[Brewery]]): Option[Response[Stream]] = v match {
+  def apply(v: Action[Keyed[Brewery]]): Option[Response] = v match {
     case New => render(breweries.nu(request.formBase(Nil))) η
 
     case rest.Show(brewery) => {
@@ -38,14 +36,14 @@ object BreweriesController extends RestController[Keyed[Brewery]] {
       
       saved fold ({errors => 
         render(breweries.nu(request.formBase(errors.list)))
-      }, _ => request.redirectTo("/"))
+      }, _ => belt.redirect("/"))
     } η
 
     case Update(brewery) => {
         val (errors, updated) = request.update(brewery.value)
         val newKeyed = Keyed(brewery.key, updated)
         errors match {
-          case Nil => request.redirectTo(Breweries << newKeyed)
+          case Nil => rest.redirect(Breweries << newKeyed)
           case (_ :: _) => render(breweries.edit(newKeyed, errors))
         }
     } η
