@@ -14,20 +14,18 @@ import wd._
 import controllers._
 
 class Application extends Belt with WDLayout {
-
   prohax.Bootstrap.defineInflections_!
-  
+
   def service(request: Request): Response = {
-    scapps.R.service(request) {
-      Services.service {
-        request.log
-        route(request.methodHax()) | _404_
-      }
-    }
+    scapps.R.set(request)
+    Services.setup_!
+    request.log
+    route(request.methodHax()) | _404_
   }
 
   import Services._
   def _404_ = render(<p>404</p>, status = NotFound)
+
   def _503_ = render(<p>503</p>, status = Forbidden)
 
   implicit def richAction(v: Action[String]) = new {
@@ -43,7 +41,7 @@ class Application extends Belt with WDLayout {
         "breweries" / (r => v => {
           v.lookup(Breweries) >>= BreweriesController.apply _
         })
-      ))
+        ))
     }
   }
 }

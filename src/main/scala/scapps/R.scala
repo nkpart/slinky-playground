@@ -1,15 +1,16 @@
 package scapps
 
 import belt._
-import scalaz.http.servlet._
 import scala.util.DynamicVariable
 
 object R {
-  private val requestData = new DynamicVariable[Request](null)
+  private val requestVar = new DynamicVariable[Request](null)
   
-  implicit def request = requestData.value
-  
+  def request = requestVar.value
+
+  def set(request: Request) = requestVar.value = request
+
   def service[T](request: Request)(t: => T): T = {
-    requestData.withValue(request)(t)
+    requestVar.withValue(request)(t)
   }
 }

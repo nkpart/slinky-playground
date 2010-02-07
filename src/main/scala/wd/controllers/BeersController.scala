@@ -16,9 +16,9 @@ import com.google.appengine.api.datastore.DatastoreService
 object BeersController extends RestController[String] {
   import scapps.R._
   import Services._
-  
+
   def ds = datastoreService
-  
+
   def apply(v: Action[String]) = v match {
     case New => {
       // TODO Add contexts matching in.
@@ -28,7 +28,7 @@ object BeersController extends RestController[String] {
           render(beers.nu(Left(brewery)))
         }
       } none {
-        val breweries = Breweries.allByName    
+        val breweries = Breweries.allByName
         Some(render(beers.nu(Right(breweries))))
       }
     }

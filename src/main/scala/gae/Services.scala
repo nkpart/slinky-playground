@@ -10,6 +10,12 @@ object Services {
   
   implicit def userService =      dynUserService.value._1
   implicit def datastoreService = dynUserService.value._2
+
+  def setup_! {
+    val ds = DatastoreServiceFactory.getDatastoreService
+    val us = UserServiceFactory.getUserService
+    dynUserService.value = (us,ds)
+  }
   
   def service[T](t: => T): T = {
     val ds = DatastoreServiceFactory.getDatastoreService
