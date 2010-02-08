@@ -28,7 +28,6 @@ trait RestHelpers {
 
 // TODO package object, couldn't get it to work last time
 object layouts {
-
   def main(us: UserService)(content: NodeSeq): NodeSeq = {
     <html>
       <head>
