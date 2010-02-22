@@ -5,7 +5,7 @@ import scalaz._
 import Scalaz._
 import scapps._
 import belt._
-import wd.{Brewery, Beer, Style, Country}
+import wd.{Brewery, Beer, Style}
 import prohax.Inflector._
 import sage._
 

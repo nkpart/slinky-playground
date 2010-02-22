@@ -10,7 +10,7 @@ import scalaz.http.request._
 import wd.views._
 
 object Start extends WDLayout {
-  import scapps.R._
+  import scapps.Global._
   import gae.Services._
     
   def root = {

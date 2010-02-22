@@ -135,7 +135,7 @@ object breweries extends RestHelpers {
   }
 
   def newBrewery(errors: List[(String,String)]) = {
-    val base = scapps.R.request.formBase(errors)
+    val base = scapps.Global.request.formBase(errors)
     base.form("/breweries", POST) {
       <p>{
         base.text("name", value = Some("hi ther"))

@@ -8,7 +8,6 @@ import scalaz.http.request._
 import rest._
 import com.google.appengine.api.datastore._
 import scapps._
-import Scapps._
 
 import wd._
 import controllers._
@@ -17,10 +16,19 @@ class Application extends Belt with WDLayout {
   prohax.Bootstrap.defineInflections_!
 
   def service(request: Request): Response = {
-    scapps.R.set(request)
+    scapps.Global.set(request)
     Services.setup_!
     request.log
-    route(request.methodHax()) | _404_
+    println(request.underlying.headers map {
+      case (h, v) => "%s -> %s" format (h.asString, v.list.mkString)
+    })
+    
+    Response(Unauthorized, (WWWAuthenticate, "Basic realm=\"Secure Area\""))(resp => {
+      resp
+    })
+    try {
+      route(request.methodHax()) | _404_
+    } catch { case _ => _404_ }
   }
 
   import Services._

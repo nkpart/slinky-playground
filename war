@@ -1,1 +1,1 @@
-./appengine/bin/dev_appserver.sh target/scala_2.8.0.Beta1-RC8/webapp
+./appengine/bin/dev_appserver.sh target/scala_2.8.0.Beta1/webapp

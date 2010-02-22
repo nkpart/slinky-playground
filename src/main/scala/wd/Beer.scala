@@ -11,5 +11,5 @@ case class Style(value: String) extends NewType[String]
 case class Beer(name: String, style: Style)
 
 object Beers extends sage.Base[Beer]("beer") {
-  def * = "name".prop[String] ~ Style <> (Beer, Beer.unapply _)
+  def * = "name".prop[String] :: Style.prop >< (Beer <-> Beer.unapply _)
 }

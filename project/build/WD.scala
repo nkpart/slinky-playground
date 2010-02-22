@@ -21,6 +21,8 @@ class WDProject(info: ProjectInfo) extends DefaultWebProject(info) {
   val scalaz_core = "com.googlecode.scalaz" % "scalaz-core_2.8.0.Beta1-RC8" % "5.0-SNAPSHOT"
   val scalaz_http = "com.googlecode.scalaz" % "scalaz-http_2.8.0.Beta1-RC8" % "5.0-SNAPSHOT"
   
+  val scapps = "prohax" %% "scapps" % "0.1"
   val sage = "prohax" %% "sage" % "0.1"
   val belt = "prohax" %% "belt" % "0.1"
+  val metascala = "metascala" %% "metascala" % "0.1"
 }

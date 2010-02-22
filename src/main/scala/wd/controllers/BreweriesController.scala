@@ -14,7 +14,7 @@ import wd.views.breweries
 import sage._
 
 object BreweriesController extends RestController[Keyed[Brewery]] {
-  import scapps.R._
+  import scapps.Global._
   import Services._
   
   def ds = datastoreService
